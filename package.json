@@ -17,26 +17,31 @@
     "crunchy": "./bin/crunchy"
   },
   "dependencies": {
-    "big-integer": "^1.4.4",
+    "big-integer": "^1.6.24",
     "cheerio": "^0.22.0",
     "cloudscraper": "^1.4.1",
-    "commander": "^2.6.0",
-    "fs-extra": "^2.0.0",
-    "mkdirp": "^0.5.0",
-    "request": "^2.74.0",
-    "xml2js": "^0.4.5"
+    "commander": "^2.11.0",
+    "fs-extra": "^4.0.1",
+    "mkdirp": "^0.5.1",
+    "request": "^2.81.0",
+    "xml2js": "^0.4.19"
   },
   "devDependencies": {
+    "@types/cheerio": "^0.22.2",
+    "@types/commander": "~2.3.31",
+    "@types/fs-extra": "^4.0.0",
+    "@types/mkdirp": "^0.5.1",
+    "@types/node": "^4.2.20",
+    "@types/request": "^2.0.3",
+    "@types/xml2js": "^0.4.0",
     "tsconfig-lint": "^0.12.0",
     "tslint": "^4.4.2",
-    "typescript": "^2.2.0",
-    "typings": "^2.1.0"
+    "typescript": "^2.5.1"
   },
   "scripts": {
-    "prepublish": "npm run types && tsc",
+    "prepublish": "npm run compile",
     "compile": "tsc",
     "test": "tslint -c ./tslint.json --project ./tsconfig.json ./src/**/*.ts",
-    "types": "typings install",
     "start": "node ./bin/crunchy"
   },
   "bugs": {
