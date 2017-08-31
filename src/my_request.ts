@@ -2,7 +2,11 @@
 import request = require('request');
 import cheerio = require('cheerio');
 import log = require('./log');
+import { getConfig, saveConfig } from './config';
 const cloudscraper = require('cloudscraper');
+
+const cookieJar = request.jar();
+const CR_COOKIE_DOMAIN = 'http://crunchyroll.com';
 
 let isAuthenticated = false;
 let isPremium = false;
@@ -64,18 +68,58 @@ export function post(config: IConfig, options: request.Options, done: (err: Erro
 /**
  * Authenticates using the configured pass and user.
  */
-function authenticate(config: IConfig, done: (err: Error) => void)
+function authenticate(config: IConfig, done: (err: Error) => void): void
 {
-  if (isAuthenticated || !config.pass || !config.user)
+  if (isAuthenticated)
   {
       return done(null);
   }
 
+  if (config.user && config.pass)
+  {
+    return doLogin(config, done);
+  }
+
+  if (config.userId && config.userKey)
+  {
+    return doLoginExistingSession(config.userId, config.userKey, done);
+  }
+
+  getConfig((err, credentials) =>
+  {
+    if (!err && credentials.userid && credentials.userkey)
+    {
+      return doLoginExistingSession(credentials.userid, credentials.userkey, done);
+    }
+
+    doLogin(config, done);
+  });
+}
+
+function doLoginExistingSession(userid: string, userkey: string, done: (err: Error) => void): void
+{
+  cookieJar.setCookie(request.cookie('c_userid=' + userid + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'), CR_COOKIE_DOMAIN);
+  cookieJar.setCookie(request.cookie('c_userkey=' + userkey + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'), CR_COOKIE_DOMAIN);
+
+  verifyAuthentication((err: Error) =>
+  {
+    if (err && err.message.substr(0, 22) === 'Authentication failed:')
+    {
+      log.warn('Saved credentials are invalid!');
+      return done(null);
+    }
+
+    done(err);
+  });
+}
+
+function doLogin(config: IConfig, done: (err: Error) => void): void
+{
   /* Bypass the login page and send a login request directly */
   let options =
   {
     headers: defaultHeaders,
-    jar: true,
+    jar: cookieJar,
     gzip: false,
     method: 'GET',
     url: 'https://www.crunchyroll.com/login'
@@ -104,7 +148,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
         'login_form[password]': config.pass,
         'login_form[_token]': token
       },
-      jar: true,
+      jar: cookieJar,
       gzip: false,
       method: 'POST',
       url: 'https://www.crunchyroll.com/login'
@@ -114,63 +158,126 @@ function authenticate(config: IConfig, done: (err: Error) => void)
     {
       if (err)
       {
-          return done(err);
+        return done(err);
       }
 
-      /* The page return with a meta based redirection, as we wan't to check that everything is fine, reload
+      /* The page return with a meta based redirection, as we want to check that everything is fine, reload
        * the main page. A bit convoluted, but more sure.
        */
-      let options =
-      {
-        headers: defaultHeaders,
-        jar: true,
-        url: 'http://www.crunchyroll.com/',
-        method: 'GET'
-      };
-
-      cloudscraper.request(options, (err: Error, rep: string, body: string) =>
+      verifyAuthentication((err: Error) =>
       {
         if (err)
         {
-            return done(err);
+          return done(err);
         }
 
-        let $ = cheerio.load(body);
-
-        /* Check if auth worked */
-        const regexps = /ga\('set', 'dimension[5-8]', '([^']*)'\);/g;
-        const dims = regexps.exec($('script').text());
-
-        for (let i = 1; i < 5; i++)
+        if (!config.saveCredentials)
         {
-          if ((dims[i] !== undefined) && (dims[i] !== '') && (dims[i] !== 'not-registered'))
+          return done(null);
+        }
+
+        let credentials: any = {};
+        for (const cookie of cookieJar.getCookies(CR_COOKIE_DOMAIN) as any[])
+        {
+          switch (cookie.key)
           {
-              isAuthenticated = true;
+            default:
+              continue;
+            case 'c_userid':
+              credentials.userid = cookie.value;
+              break;
+            case 'c_userkey':
+              credentials.userkey = cookie.value;
+              break;
+          }
+        }
+
+        if (!credentials.userid || !credentials.userkey)
+        {
+          log.warn('Failed to save credentials: missing cookies');
+          return done(null);
+        }
+
+        getConfig((err, config) =>
+        {
+          if (err)
+          {
+            console.warn('Failed to save credentials:', err);
+            return done(null);
           }
 
-          if ((dims[i] === 'premium') || (dims[i] === 'premiumplus'))
-          {
-              isPremium = true;
-          }
-        }
+          config.userid = credentials.userid;
+          config.userkey = credentials.userkey;
 
-        if (isAuthenticated === false)
-        {
-          const error = $('ul.message, li.error').text();
-          return done(new Error('Authentication failed: ' + error));
-        }
+          saveConfig(config, (err) => {
+            if (err)
+            {
+              console.warn('Failed to save credentials:', err);
+            }
+            else
+            {
+              log.info('Saved account credentials');
+            }
 
-        if (isPremium === false)
-        {
-            log.warn('Do not use this app without a premium account.');
-        }
-        else
-        {
-            log.info('You have a premium account! Good!');
-        }
-        done(null);
+            done(null);
+          });
+        });
       });
     });
+  });
+}
+
+function verifyAuthentication(done: (err: Error) => void): void
+{
+  let options =
+  {
+    headers: defaultHeaders,
+    jar: cookieJar,
+    url: 'http://www.crunchyroll.com/',
+    method: 'GET'
+  };
+
+  cloudscraper.request(options, (err: Error, rep: string, body: string) =>
+  {
+    if (err)
+    {
+      return done(err);
+    }
+
+    let $ = cheerio.load(body);
+
+    /* Check if auth worked */
+    const regexps = /ga\('set', 'dimension[5-8]', '([^']*)'\);/g;
+    const dims = regexps.exec($('script').text());
+
+    for (let i = 1; i < 5; i++)
+    {
+      if ((dims[i] !== undefined) && (dims[i] !== '') && (dims[i] !== 'not-registered'))
+      {
+        isAuthenticated = true;
+      }
+
+      if ((dims[i] === 'premium') || (dims[i] === 'premiumplus'))
+      {
+        isPremium = true;
+      }
+    }
+
+    if (isAuthenticated === false)
+    {
+      const error = $('ul.message, li.error').text();
+      return done(new Error('Authentication failed: ' + error));
+    }
+
+    if (isPremium === false)
+    {
+      log.warn('Do not use this app without a premium account.');
+    }
+    else
+    {
+      log.info('You have a premium account! Good!');
+    }
+    done(null);
   });
 }
 
@@ -181,10 +288,10 @@ function modify(options: string|request.Options, reqMethod: string): request.Opt
 {
   if (typeof options !== 'string')
   {
-    options.jar = true;
+    options.jar = cookieJar;
     options.headers = defaultHeaders;
     options.method = reqMethod;
     return options;
   }
-  return { jar: true, headers: defaultHeaders, url: options.toString(), method: reqMethod };
+  return { jar: cookieJar, headers: defaultHeaders, url: options.toString(), method: reqMethod };
 }

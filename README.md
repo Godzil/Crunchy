@@ -57,18 +57,21 @@ The [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface
 
     Options:
 
-      -h, --help         output usage information
-      -V, --version      output the version number
-      -p, --pass <s>     The password.
-      -u, --user <s>     The e-mail address or username.
-      -c, --cache        Disables the cache.
-      -m, --merge        Disables merging subtitles and videos.
-      -e, --episode <i>  The episode filter.
-      -v, --volume <i>   The volume filter.
-      -f, --format <s>   The subtitle format. (Default: ass)
-      -o, --output <s>   The output path.
-      -s, --series <s>   The series override.
-      -t, --tag <s>      The subgroup. (Default: CrunchyRoll)
+      -h, --help          output usage information
+      -V, --version       output the version number
+      -p, --pass <s>      The password.
+      -u, --user <s>      The e-mail address or username.
+      --save-credentials  Saves your account credentials.
+      --user-id           The user id from an existing session (browser cookie).
+      --user-key          The user key from an existing session (browser cookie).
+      -c, --cache         Disables the cache.
+      -m, --merge         Disables merging subtitles and videos.
+      -e, --episode <i>   The episode filter.
+      -v, --volume <i>    The volume filter.
+      -f, --format <s>    The subtitle format. (Default: ass)
+      -o, --output <s>    The output path.
+      -s, --series <s>    The series override.
+      -t, --tag <s>       The subgroup. (Default: CrunchyRoll)
 
 #### Batch-mode
 
@@ -94,6 +97,9 @@ Download *Fairy Tail* to `C:\Anime`:
 
 * `-p or --pass <s>` sets the password.
 * `-u or --user <s>` sets the e-mail address or username.
+* `--save-credentials` saves your account credentials.
+* `--user-id` sets the user id cookie.
+* `--user-key` sets the user key cookie.
 
  _Please remember that login has to be done for each call of Crunchy, as none of the credentials are stored_
 
