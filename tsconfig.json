@@ -1,5 +1,4 @@
 {
-    "version": "1.5.1-beta",
     "compilerOptions": {
         "declaration": true,
         "noImplicitAny": true,
@@ -9,38 +8,7 @@
         "sourceMap": true,
         "target": "es5"
     },
-    "filesGlob": [
-        "src/**/*.ts",
-        "typings/**/*.ts"
-    ],
-    "files": [
-        "src/batch.ts",
-        "src/cli.ts",
-        "src/episode.ts",
-        "src/index.ts",
-        "src/log.ts",
-        "src/interface/IConfig.d.ts",
-        "src/interface/IConfigLine.d.ts",
-        "src/interface/IConfigTask.d.ts",
-        "src/interface/IEpisodePage.d.ts",
-        "src/interface/IEpisodePlayer.d.ts",
-        "src/interface/IEpisodePlayerConfig.d.ts",
-        "src/interface/IFormatterTable.d.ts",
-        "src/interface/ISeries.d.ts",
-        "src/interface/ISeriesEpisode.d.ts",
-        "src/interface/ISubtitle.d.ts",
-        "src/interface/ISubtitleEvent.d.ts",
-        "src/interface/ISubtitleStyle.d.ts",
-        "src/my_request.ts",
-        "src/series.ts",
-        "src/subtitle/decode.ts",
-        "src/subtitle/formats/ass.ts",
-        "src/subtitle/formats/index.ts",
-        "src/subtitle/formats/srt.ts",
-        "src/subtitle/index.ts",
-        "src/video/index.ts",
-        "src/video/merge.ts",
-        "src/video/stream.ts",
-        "typings/index.d.ts"
+    "include": [
+        "./src/**/*"
     ]
 }

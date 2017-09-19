@@ -4,8 +4,7 @@ node_js:
  - 5
  - 6
 before_install:
- - npm install --only=dev
+ - npm install
 script:
- - npm run types
  - npm run compile
  - npm test
