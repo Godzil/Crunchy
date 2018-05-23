@@ -6,6 +6,9 @@
         "removeComments": false,
         "module": "commonjs",
         "outDir": "dist",
-        "sourceMap": true
+        "sourceMap": true,
+        "lib": [
+            "es2015"
+        ]
     }
 }
