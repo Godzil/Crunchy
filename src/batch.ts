@@ -170,6 +170,9 @@ function parse(args: string[]): IConfigLine
     // Authentication
     .option('-p, --pass <s>', 'The password.')
     .option('-u, --user <s>', 'The e-mail address or username.')
+    .option('--save-credentials', 'Saves your account credentials.')
+    .option('--user-id <s>', 'The user id from an existing session (browser cookie).')
+    .option('--user-key <s>', 'The user key from an existing session (browser cookie).')
     // Disables
     .option('-c, --cache', 'Disables the cache.')
     .option('-m, --merge', 'Disables merging subtitles and videos.')
