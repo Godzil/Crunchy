@@ -33,10 +33,10 @@ export default function(input: string|Buffer, done: (err: Error, subtitle?: stri
  */
 function event(block: ISubtitleEvent): string
 {
-  var format = 'Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text';
+  const format = 'Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text';
 
   return '[Events]\n' +
-         'Format: ' + format + '\n' + [].concat(block.event).map(style => ('Dialogue: 0,' +
+         'Format: ' + format + '\n' + [].concat(block.event).map((style) => ('Dialogue: 0,' +
               style.$.start + ',' +
               style.$.end + ',' +
               style.$.style + ',' +
@@ -70,13 +70,13 @@ function script(block: ISubtitle): string
  */
 function style(block: ISubtitleStyle): string
 {
-  var format = 'Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,' +
+  const format = 'Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,' +
                'OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,' +
                'ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,' +
                'MarginL,MarginR,MarginV,Encoding';
 
   return '[V4+ Styles]\n' +
-         'Format: ' + format + '\n' + [].concat(block.style).map(style => 'Style: ' +
+         'Format: ' + format + '\n' + [].concat(block.style).map((style) => 'Style: ' +
               style.$.name + ',' +
               style.$.font_name + ',' +
               style.$.font_size + ',' +

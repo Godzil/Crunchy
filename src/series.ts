@@ -2,7 +2,7 @@
 import cheerio = require('cheerio');
 import episode from './episode';
 import fs = require('fs');
-const fse = require('fs-extra');
+import fse = require('fs-extra');
 import my_request = require('./my_request');
 import path = require('path');
 import url = require('url');
@@ -153,7 +153,7 @@ function page(config: IConfig, address: string, done: (err: Error, result?: ISer
       episode: '',
       volume: 0,
     });
-    done(null, {episodes: episodes.reverse(), series: ""});
+    done(null, {episodes: episodes.reverse(), series: ''});
   }
   else
   {
@@ -195,7 +195,7 @@ function page(config: IConfig, address: string, done: (err: Error, result?: ISer
       });
       if (episodeCount === 0)
       {
-        log.warn("No episodes found for " + title + ". Could it be a movie?");
+        log.warn('No episodes found for ' + title + '. Could it be a movie?');
       }
       done(null, {episodes: episodes.reverse(), series: title});
     });

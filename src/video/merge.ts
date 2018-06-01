@@ -17,7 +17,7 @@ export default function(config: IConfig, isSubtitled: boolean, rtmpInputPath: st
 
   if (streamMode === 'RTMP')
   {
-	  videoPath += path.extname(rtmpInputPath);
+    videoPath += path.extname(rtmpInputPath);
   }
   else
   {

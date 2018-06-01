@@ -32,7 +32,7 @@ export default function(args: string[], done: (err?: Error) => void)
     }
     catch (e)
     {
-      log.warn(`Invalid resolution ${config.resolution}p. Setting to 1080p`);
+      log.warn('Invalid resolution ' + config.resolution + 'p. Setting to 1080p');
       config.video_format = resol_table['1080'].format;
       config.video_quality = resol_table['1080'].quality;
     }
@@ -46,7 +46,10 @@ export default function(args: string[], done: (err?: Error) => void)
 
   tasks(config, batchPath, (err, tasksArr) =>
   {
-    if (err) return done(err);
+    if (err)
+    {
+        return done(err);
+    }
 
     let i = 0;
 

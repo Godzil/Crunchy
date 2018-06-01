@@ -8,6 +8,6 @@ batch(process.argv, (err: any) =>
     console.error(err.stack || err);
     process.exit(-1);
   }
-  console.log('Done!');
+  console.info('Done!');
   process.exit(0);
 });

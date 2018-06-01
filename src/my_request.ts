@@ -13,33 +13,33 @@ const cloudscraper = require('cloudscraper');
 let isAuthenticated = false;
 let isPremium = false;
 
-const defaultHeaders: request.Headers = 
+const defaultHeaders: request.Headers =
 {
   'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64; x64; rv:58.0) Gecko/20100101 Firefox/58.0',
   'Connection': 'keep-alive',
   'Referer': 'https://www.crunchyroll.com/login',
 };
 
-function generateDeviceId(): string 
+function generateDeviceId(): string
 {
   let id = '';
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-  for (let i = 0; i < 32; i++) 
+  for (let i = 0; i < 32; i++)
   {
-      id += possible.charAt(Math.floor(Math.random() * possible.length));
+    id += possible.charAt(Math.floor(Math.random() * possible.length));
   }
 
   return id;
 }
 
-function startSession(): Promise<string> 
+function startSession(): Promise<string>
 {
   return rp(
   {
     method: 'GET',
     url: 'https://api.crunchyroll.com/start_session.0.json',
-    qs: 
+    qs:
     {
       device_id: generateDeviceId(),
       device_type: 'com.crunchyroll.iphone',
@@ -49,7 +49,7 @@ function startSession(): Promise<string>
     },
     json: true,
   })
-  .then((response: any) => 
+  .then((response: any) =>
   {
     return response.data.session_id;
   });
@@ -61,7 +61,7 @@ function login(sessionId: string, user: string, pass: string): Promise<any>
   {
     method: 'POST',
     url: 'https://api.crunchyroll.com/login.0.json',
-    form: 
+    form:
     {
       account: user,
       password: pass,
@@ -210,10 +210,10 @@ function modify(options: string|request.Options, reqMethod: string): request.Opt
     options.method = reqMethod;
     return options;
   }
-  return { 
-    jar: true, 
-    headers: defaultHeaders, 
-    url: options.toString(), 
-    method: reqMethod 
+  return {
+    jar: true,
+    headers: defaultHeaders,
+    url: options.toString(),
+    method: reqMethod
   };
 }
