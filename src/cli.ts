@@ -6,8 +6,8 @@ batch(process.argv, (err: any) =>
   if (err)
   {
     console.error(err.stack || err);
-    process.exit(-1)
+    process.exit(-1);
   }
-  console.info("Done!")
-  process.exit(0)
+  console.log('Done!');
+  process.exit(0);
 });

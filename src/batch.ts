@@ -2,15 +2,15 @@
 import commander = require('commander');
 import fs = require('fs');
 import path = require('path');
-import series from './series';
 import log = require('./log');
+import series from './series';
 
 /* correspondances between resolution and value CR excpect */
-let resol_table: { [id: string]: IResolData; } = {
-    '360':  {quality:'60', format:'106'},
-    '480':  {quality:'61', format:'106'},
-    '720':  {quality:'62', format:'106'},
-    '1080': {quality:'80', format:'108'},
+const resol_table: { [id: string]: IResolData; } = {
+    360:  {quality: '60', format: '106'},
+    480:  {quality: '61', format: '106'},
+    720:  {quality: '62', format: '106'},
+    1080: {quality: '80', format: '108'},
 };
 
 /**
@@ -26,40 +26,35 @@ export default function(args: string[], done: (err?: Error) => void)
   {
     try
     {
-      config.video_format = resol_table[config.resolution]['format'];
-      config.video_quality = resol_table[config.resolution]['quality'];
-    }
-    catch(e)
-    {
-      log.warn("Invalid resolution " + config.resolution + "p. Setting to 1080p")
-      config.video_format = resol_table['1080']['format'];
-      config.video_quality = resol_table['1080']['quality'];
+      config.video_format = resol_table[config.resolution].format;
+      config.video_quality = resol_table[config.resolution].quality;
+    } catch (e) {
+      log.warn(`Invalid resolution ${config.resolution}p. Setting to 1080p`);
+      config.video_format = resol_table['1080'].format;
+      config.video_quality = resol_table['1080'].quality;
     }
   }
   else
   {
     /* 1080 by default */
-    config.video_format = resol_table['1080']['format'];
-    config.video_quality = resol_table['1080']['quality'];
+    config.video_format = resol_table['1080'].format;
+    config.video_quality = resol_table['1080'].quality;
   }
 
-  tasks(config, batchPath, (err, tasks) =>
+  tasks(config, batchPath, (err, tasksArr) =>
   {
-    if (err)
-    {
-      return done(err);
-    }
+    if (err) return done(err);
 
     let i = 0;
 
     (function next()
     {
-      if (i >= tasks.length)
+      if (i >= tasksArr.length)
       {
         return done();
       }
 
-      series(tasks[i].config, tasks[i].address, (errin) =>
+      series(tasksArr[i].config, tasksArr[i].address, (errin) =>
       {
         if (errin)
         {

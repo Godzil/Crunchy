@@ -64,6 +64,8 @@
       "check-operator",
       "check-separator",
       "check-type"
-    ]
+    ],
+    "object-literal-sort-keys": false,
+    "ordered-imports": false
   }
 }
