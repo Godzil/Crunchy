@@ -57,7 +57,8 @@ function fileExist(path: string)
   {
     fs.statSync(path);
     return true;
-  } catch (e)
+  }
+  catch (e)
   {
     return false;
   }
@@ -82,6 +83,13 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
   if (fileExist(filePath + '.mkv'))
   {
     let count = 0;
+
+    if (config.rebuildcrp)
+    {
+      log.warn('Adding \'' + fileName + '\' to the DB...');
+      return done(null, false);
+    }
+
     log.warn('File \'' + fileName + '\' already exist...');
 
     do
@@ -92,6 +100,11 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
     } while (fileExist(filePath + '.mkv'));
 
     log.warn('Renaming to \'' + fileName + '\'...');
+  }
+
+  if (config.rebuildcrp)
+  {
+    return done(null, true);
   }
 
   mkdirp(path.dirname(filePath), (errM: Error) =>

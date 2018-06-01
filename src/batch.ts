@@ -6,7 +6,8 @@ import log = require('./log');
 import series from './series';
 
 /* correspondances between resolution and value CR excpect */
-const resol_table: { [id: string]: IResolData; } = {
+const resol_table: { [id: string]: IResolData; } =
+{
     360:  {quality: '60', format: '106'},
     480:  {quality: '61', format: '106'},
     720:  {quality: '62', format: '106'},
@@ -28,7 +29,9 @@ export default function(args: string[], done: (err?: Error) => void)
     {
       config.video_format = resol_table[config.resolution].format;
       config.video_quality = resol_table[config.resolution].quality;
-    } catch (e) {
+    }
+    catch (e)
+    {
       log.warn(`Invalid resolution ${config.resolution}p. Setting to 1080p`);
       config.video_format = resol_table['1080'].format;
       config.video_quality = resol_table['1080'].quality;
@@ -178,5 +181,6 @@ function parse(args: string[]): IConfigLine
     .option('-n, --filename <s>', 'The name override.')
     .option('-t, --tag <s>', 'The subgroup. (Default: CrunchyRoll)')
     .option('-r, --resolution <s>', 'The video resolution. (Default: 1080 (360, 480, 720, 1080))')
+    .option('-g, --rebuildcrp', 'Rebuild the crpersistant file.')
     .parse(args);
 }

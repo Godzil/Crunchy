@@ -13,28 +13,34 @@ const cloudscraper = require('cloudscraper');
 let isAuthenticated = false;
 let isPremium = false;
 
-const defaultHeaders: request.Headers = {
+const defaultHeaders: request.Headers = 
+{
   'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64; x64; rv:58.0) Gecko/20100101 Firefox/58.0',
   'Connection': 'keep-alive',
   'Referer': 'https://www.crunchyroll.com/login',
 };
 
-function generateDeviceId(): string {
-	let id = '';
-	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+function generateDeviceId(): string 
+{
+  let id = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-	for (let i = 0; i < 32; i++) {
-		id += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
+  for (let i = 0; i < 32; i++) 
+  {
+      id += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
 
-	return id;
+  return id;
 }
 
-function startSession(): Promise<string> {
-  return rp({
+function startSession(): Promise<string> 
+{
+  return rp(
+  {
     method: 'GET',
     url: 'https://api.crunchyroll.com/start_session.0.json',
-    qs: {
+    qs: 
+    {
       device_id: generateDeviceId(),
       device_type: 'com.crunchyroll.iphone',
       access_token: 'QWjz212GspMHH9h',
@@ -43,16 +49,20 @@ function startSession(): Promise<string> {
     },
     json: true,
   })
-  .then((response: any) => {
+  .then((response: any) => 
+  {
     return response.data.session_id;
   });
 }
 
-function login(sessionId: string, user: string, pass: string): Promise<any> {
-  return rp({
+function login(sessionId: string, user: string, pass: string): Promise<any>
+{
+  return rp(
+  {
     method: 'POST',
     url: 'https://api.crunchyroll.com/login.0.json',
-    form: {
+    form: 
+    {
       account: user,
       password: pass,
       session_id: sessionId,
@@ -60,7 +70,8 @@ function login(sessionId: string, user: string, pass: string): Promise<any> {
     },
     json: true,
   })
-  .then((response) => {
+  .then((response) =>
+  {
     if (response.error) throw new Error('Login failed: ' + response.message);
     return response.data;
   });
@@ -71,13 +82,17 @@ function login(sessionId: string, user: string, pass: string): Promise<any> {
 /**
  * Performs a GET request for the resource.
  */
-export function get(config: IConfig, options: string|request.Options, done: (err: Error, result?: string) => void) {
-  authenticate(config, (err) => {
-    if (err) {
+export function get(config: IConfig, options: string|request.Options, done: (err: Error, result?: string) => void)
+{
+  authenticate(config, (err) =>
+  {
+    if (err)
+    {
       return done(err);
     }
 
-    cloudscraper.request(modify(options, 'GET'), (error: Error, response: any, body: any) => {
+    cloudscraper.request(modify(options, 'GET'), (error: Error, response: any, body: any) =>
+    {
       if (error) return done(error);
       done(null, typeof body === 'string' ? body : String(body));
     });
@@ -87,14 +102,21 @@ export function get(config: IConfig, options: string|request.Options, done: (err
 /**
  * Performs a POST request for the resource.
  */
-export function post(config: IConfig, options: request.Options, done: (err: Error, result?: string) => void) {
-  authenticate(config, (err) => {
-    if (err) {
+export function post(config: IConfig, options: request.Options, done: (err: Error, result?: string) => void)
+{
+  authenticate(config, (err) =>
+  {
+    if (err)
+    {
         return done(err);
     }
 
-    cloudscraper.request(modify(options, 'POST'), (error: Error, response: any, body: any) => {
-      if (error) return done(error);
+    cloudscraper.request(modify(options, 'POST'), (error: Error, response: any, body: any) =>
+    {
+      if (error)
+      {
+         return done(error);
+      }
       done(null, typeof body === 'string' ? body : String(body));
     });
   });
@@ -103,30 +125,39 @@ export function post(config: IConfig, options: request.Options, done: (err: Erro
 /**
  * Authenticates using the configured pass and user.
  */
-function authenticate(config: IConfig, done: (err: Error) => void) {
-  if (isAuthenticated || !config.pass || !config.user) {
+function authenticate(config: IConfig, done: (err: Error) => void)
+{
+  if (isAuthenticated || !config.pass || !config.user)
+  {
       return done(null);
   }
 
   startSession()
-  .then((sessionId: string) => {
+  .then((sessionId: string) =>
+  {
     defaultHeaders.Cookie = `sess_id=${sessionId}; c_locale=enUS`;
     return login(sessionId, config.user, config.pass);
   })
-  .then((userData) => {
+  .then((userData) =>
+  {
     /**
      * The page return with a meta based redirection, as we wan't to check that everything is fine, reload
      * the main page. A bit convoluted, but more sure.
      */
-    const options = {
+    const options =
+    {
       headers: defaultHeaders,
       jar: true,
       url: 'http://www.crunchyroll.com/',
       method: 'GET',
     };
 
-    cloudscraper.request(options, (err: Error, rep: string, body: string) => {
-      if (err) return done(err);
+    cloudscraper.request(options, (err: Error, rep: string, body: string) =>
+    {
+      if (err)
+      {
+         return done(err);
+      }
 
       const $ = cheerio.load(body);
 
@@ -134,24 +165,31 @@ function authenticate(config: IConfig, done: (err: Error) => void) {
       const regexps = /ga\('set', 'dimension[5-8]', '([^']*)'\);/g;
       const dims = regexps.exec($('script').text());
 
-      for (let i = 1; i < 5; i++) {
-        if ((dims[i] !== undefined) && (dims[i] !== '') && (dims[i] !== 'not-registered')) {
+      for (let i = 1; i < 5; i++)
+      {
+        if ((dims[i] !== undefined) && (dims[i] !== '') && (dims[i] !== 'not-registered'))
+        {
             isAuthenticated = true;
         }
 
-        if ((dims[i] === 'premium') || (dims[i] === 'premiumplus')) {
+        if ((dims[i] === 'premium') || (dims[i] === 'premiumplus'))
+        {
             isPremium = true;
         }
       }
 
-      if (isAuthenticated === false) {
+      if (isAuthenticated === false)
+      {
         const error = $('ul.message, li.error').text();
         return done(new Error('Authentication failed: ' + error));
       }
 
-      if (isPremium === false) {
+      if (isPremium === false)
+      {
           log.warn('Do not use this app without a premium account.');
-      } else {
+      }
+      else
+      {
           log.info('You have a premium account! Good!');
       }
       done(null);
@@ -165,11 +203,17 @@ function authenticate(config: IConfig, done: (err: Error) => void) {
  */
 function modify(options: string|request.Options, reqMethod: string): request.Options
 {
-  if (typeof options !== 'string') {
+  if (typeof options !== 'string')
+  {
     options.jar = true;
     options.headers = defaultHeaders;
     options.method = reqMethod;
     return options;
   }
-  return { jar: true, headers: defaultHeaders, url: options.toString(), method: reqMethod };
+  return { 
+    jar: true, 
+    headers: defaultHeaders, 
+    url: options.toString(), 
+    method: reqMethod 
+  };
 }

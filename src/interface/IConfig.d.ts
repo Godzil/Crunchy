@@ -17,4 +17,5 @@ interface IConfig {
   resolution?: string;
   video_format?: string;
   video_quality?: string;
+  rebuildcrp?: boolean;
 }
