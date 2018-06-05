@@ -18,4 +18,5 @@ interface IConfig {
   video_format?: string;
   video_quality?: string;
   rebuildcrp?: boolean;
+  batch?: string;
 }

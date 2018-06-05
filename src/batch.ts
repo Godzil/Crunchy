@@ -20,7 +20,7 @@ const resol_table: { [id: string]: IResolData; } =
 export default function(args: string[], done: (err?: Error) => void)
 {
   const config = parse(args);
-  const batchPath = path.join(config.output || process.cwd(), 'CrunchyRoll.txt');
+  const batchPath = path.join(config.output || process.cwd(), config.batch);
 
   // set resolution
   if (config.resolution)
@@ -182,8 +182,10 @@ function parse(args: string[]): IConfigLine
     .option('-o, --output <s>', 'The output path.')
     .option('-s, --series <s>', 'The series override.')
     .option('-n, --filename <s>', 'The name override.')
-    .option('-t, --tag <s>', 'The subgroup. (Default: CrunchyRoll)')
-    .option('-r, --resolution <s>', 'The video resolution. (Default: 1080 (360, 480, 720, 1080))')
+    .option('-t, --tag <s>', 'The subgroup. (Default: CrunchyRoll)', 'CrunchyRoll')
+    .option('-r, --resolution <s>', 'The video resolution. (Default: 1080 (360, 480, 720, 1080))',
+            '1080')
     .option('-g, --rebuildcrp', 'Rebuild the crpersistant file.')
+    .option('-b, --batch <s>', 'Batch file', 'CrunchyRoll.txt')
     .parse(args);
 }
