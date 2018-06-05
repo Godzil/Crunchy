@@ -21,18 +21,21 @@ It is recommended to enable authentication (`-p` and `-u`) so your account permi
 
 ## Prerequisites
 
-* NodeJS >= 5.x (http://nodejs.org/)
-* NPM >= 2.5.x (https://www.npmjs.org/)
+* NodeJS >= 8.1 (http://nodejs.org/)
+* NPM >= 5.8 (https://www.npmjs.org/)
 
 ## Installation
 
 Use the applicable instructions to install. Is your operating system not listed? Please ask or contribute!
 
-### Debian (Mint, Ubuntu, etc)
+### Linux (Debian, Mint, Ubuntu, etc)
 
 1. Run in *Terminal*: `sudo apt-get install nodejs npm mkvtoolnix rtmpdump ffmpeg`
 2. Run in *Terminal*: `sudo ln -s /usr/bin/nodejs /usr/bin/node`
 3. Run in *Terminal*: `sudo npm install -g crunchy`
+
+#### Updating:
+1. Run in *Terminal*: `sudo npm update -g crunchy`
 
 ### Mac OS X
 
@@ -40,10 +43,16 @@ Use the applicable instructions to install. Is your operating system not listed?
 2. Run in *Terminal*: `brew install node mkvtoolnix rtmpdump ffmpeg`
 3. Run in *Terminal*: `npm install -g crunchy`
 
+#### Updating:
+1. Run in *Terminal*: `sudo npm update -g crunchy`
+
 ### Windows
 
 1. Install *NodeJS* following the instructions at http://nodejs.org/
 3. Run in *Command Prompt*: `npm install -g crunchy`
+
+#### Updating:
+1. Run in *Terminal*: `npm update -g crunchy`
 
 ## Instructions
 
