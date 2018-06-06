@@ -52,7 +52,7 @@ Use the applicable instructions to install. Is your operating system not listed?
 3. Run in *Command Prompt*: `npm install -g crunchy`
 
 #### Updating:
-1. Run in *Terminal*: `npm update -g crunchy`
+1. Run in *Command Prompt*: `npm update -g crunchy`
 
 ## Instructions
 
