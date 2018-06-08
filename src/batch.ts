@@ -187,5 +187,6 @@ function parse(args: string[]): IConfigLine
             '1080')
     .option('-g, --rebuildcrp', 'Rebuild the crpersistant file.')
     .option('-b, --batch <s>', 'Batch file', 'CrunchyRoll.txt')
+    .option('--verbose', 'Make tool verbose')
     .parse(args);
 }

@@ -10,10 +10,11 @@ import subtitle from '../subtitle/index';
  * Merges the subtitle and video files into a Matroska Multimedia Container.
  */
 export default function(config: IConfig, isSubtitled: boolean, rtmpInputPath: string, filePath: string,
-                        streamMode: string, done: (err: Error) => void)
+                        streamMode: string, verbose: boolean, done: (err: Error) => void)
 {
   const subtitlePath = filePath + '.' + (subtitle.formats[config.format] ? config.format : 'ass');
   let videoPath = filePath;
+  let cp;
 
   if (streamMode === 'RTMP')
   {
@@ -24,7 +25,7 @@ export default function(config: IConfig, isSubtitled: boolean, rtmpInputPath: st
     videoPath += '.mp4';
   }
 
-  childProcess.exec(command() + ' ' +
+  cp = childProcess.exec(command() + ' ' +
         '-o "' + filePath + '.mkv" ' +
         '"' + videoPath + '" ' +
         (isSubtitled ? '"' + subtitlePath + '"' : ''), {
@@ -46,6 +47,13 @@ export default function(config: IConfig, isSubtitled: boolean, rtmpInputPath: st
       done(null);
     });
   });
+
+  if (verbose === true)
+  {
+    cp.stdin.pipe(process.stdin);
+    cp.stdout.pipe(process.stdout);
+    cp.stderr.pipe(process.stderr);
+  }
 }
 
 /**

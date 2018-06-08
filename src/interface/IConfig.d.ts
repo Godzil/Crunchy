@@ -19,4 +19,5 @@ interface IConfig {
   video_quality?: string;
   rebuildcrp?: boolean;
   batch?: string;
+  verbose?: boolean;
 }

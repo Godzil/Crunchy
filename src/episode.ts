@@ -141,7 +141,7 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
           const isSubtited = Boolean(player.subtitle);
 
           log.dispEpisode(fileName, 'Merging...', false);
-          video.merge(config, isSubtited, player.video.file, filePath, player.video.mode, (errVM) =>
+          video.merge(config, isSubtited, player.video.file, filePath, player.video.mode, config.verbose, (errVM) =>
           {
             if (errVM)
             {
@@ -198,11 +198,11 @@ function downloadSubtitle(config: IConfig, player: IEpisodePlayer, filePath: str
 /**
  * Streams the video to disk.
  */
-function downloadVideo(ignored/*config*/: IConfig,  page: IEpisodePage, player: IEpisodePlayer,
+function downloadVideo(config: IConfig,  page: IEpisodePage, player: IEpisodePlayer,
                        filePath: string, done: (err: Error) => void)
 {
   video.stream(player.video.host, player.video.file, page.swf, filePath,
-               path.extname(player.video.file), player.video.mode, done);
+               path.extname(player.video.file), player.video.mode, config.verbose, done);
 }
 
 /**
