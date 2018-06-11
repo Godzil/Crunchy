@@ -56,27 +56,45 @@ export default function(config: IConfig, address: string, done: (err: Error) => 
         {
           if (errD)
           {
-            return done(errD);
-          }
-
-          if ((ignored === false) || (ignored === undefined))
-          {
-            const newCache = JSON.stringify(cache, null, '  ');
-            fs.writeFile(persistentPath, newCache, (errW: Error) =>
+            if (page.episodes[i].retry <= 0)
             {
-              if (errW)
+              console.error(err.stack || err);
+              console.error('Cannot fetch episode "s' + page.episodes[i].volume + 'e' + page.episodes[i].episode +
+                            '", please rerun later');
+            }
+            else
+            {
+              if (config.verbose)
               {
-                return done(errW);
+                console.error(errD.stack || errD);
               }
-
-              i += 1;
-              next();
-            });
+              console.warn('Retrying to fetch episode "s' + page.episodes[i].volume + 'e' + page.episodes[i].episode +
+                           '" - Retry ' + page.episodes[i].retry + ' / ' + config.retry);
+              page.episodes[i].retry -= 1;
+            }
+            next();
           }
           else
           {
-            i += 1;
-            next();
+            if ((ignored === false) || (ignored === undefined))
+            {
+              const newCache = JSON.stringify(cache, null, '  ');
+              fs.writeFile(persistentPath, newCache, (errW: Error) =>
+              {
+                if (errW)
+                {
+                  return done(errW);
+                }
+
+                i += 1;
+                next();
+              });
+            }
+            else
+            {
+              i += 1;
+              next();
+            }
           }
         });
       })();
@@ -152,6 +170,7 @@ function page(config: IConfig, address: string, done: (err: Error, result?: ISer
       address: address.substr(1),
       episode: '',
       volume: 0,
+      retry: config.retry,
     });
     done(null, {episodes: episodes.reverse(), series: ''});
   }
@@ -191,6 +210,7 @@ function page(config: IConfig, address: string, done: (err: Error, result?: ISer
           address: url,
           episode: episode[1],
           volume: volume ? parseInt(volume[0], 10) : 1,
+          retry: config.retry,
         });
       });
       if (episodeCount === 0)
