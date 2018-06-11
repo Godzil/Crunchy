@@ -24,7 +24,7 @@ export default function(rtmpUrl: string, rtmpInputPath: string, swfUrl: string, 
   else if (mode === 'HLS')
   {
       cmd = command('ffmpeg') + ' ' +
-          '-y ' +
+          '-y -xerror ' +
           '-i "' + rtmpInputPath + '" ' +
           '-c copy -bsf:a aac_adtstoasc ' +
           '"' + filePath + '.mp4"';
