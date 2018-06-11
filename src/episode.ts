@@ -104,6 +104,7 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
 
   if (config.rebuildcrp)
   {
+    log.warn('Ignoring \'' + fileName + '\' as it does not exist...');
     return done(null, true);
   }
 
