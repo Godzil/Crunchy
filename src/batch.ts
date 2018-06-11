@@ -64,9 +64,25 @@ export default function(args: string[], done: (err?: Error) => void)
       {
         if (errin)
         {
-          return done(errin);
+          if (tasksArr[i].retry <= 0)
+          {
+            console.error(err.stack || err);
+            console.error('Cannot get episodes from "' + tasksArr[i].address + '", please rerun later');
+          }
+          else
+          {
+            if (config.verbose)
+            {
+              console.error(err.stack || err);
+            }
+            console.warn('Retrying to fetch episodes ' + tasksArr[i].retry + ' / ' + config.retry);
+            tasksArr[i].retry -= 1;
+          }
         }
-        i += 1;
+        else
+        {
+          i += 1;
+        }
         next();
       });
     })();
@@ -118,7 +134,7 @@ function tasks(config: IConfigLine, batchPath: string, done: (err: Error, tasks?
 
     return done(null, config.args.map((addressIn) =>
     {
-      return {address: addressIn, config: configIn};
+      return {address: addressIn, config: configIn, retry: config.retry};
     }));
   }
 
@@ -154,7 +170,7 @@ function tasks(config: IConfigLine, batchPath: string, done: (err: Error, tasks?
             return;
           }
 
-          map.push({address: addressIn, config: lineConfig});
+          map.push({address: addressIn, config: lineConfig, retry: config.retry});
         });
       });
       done(null, map);
@@ -188,5 +204,6 @@ function parse(args: string[]): IConfigLine
     .option('-g, --rebuildcrp', 'Rebuild the crpersistant file.')
     .option('-b, --batch <s>', 'Batch file', 'CrunchyRoll.txt')
     .option('--verbose', 'Make tool verbose')
+    .option('--retry <i>', 'Number or time to retry fetching an episode. Default: 5', 5)
     .parse(args);
 }
