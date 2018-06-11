@@ -21,7 +21,7 @@
     "crunchy.sh": "./bin/crunchy.sh"
   },
   "dependencies": {
-    "big-integer": "^1.6.30",
+    "big-integer": "^1.6.31",
     "bluebird": "^3.5.1",
     "cheerio": "^0.22.0",
     "cloudscraper": "^1.5.0",
@@ -40,7 +40,7 @@
     "@types/mkdirp": "^0.5.2",
     "@types/request": "^2.47.0",
     "@types/request-promise": "^4.1.41",
-    "@types/xml2js": "^0.4.2",
+    "@types/xml2js": "^0.4.3",
     "tsconfig-lint": "^0.12.0",
     "tslint": "^5.10.0",
     "typescript": "^2.9.1"
