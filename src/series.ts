@@ -1,8 +1,8 @@
 'use strict';
 import cheerio = require('cheerio');
 import episode from './episode';
-import fs = require('fs');
-import fse = require('fs-extra');
+// import fs = require('fs');
+import fs = require('fs-extra');
 import my_request = require('./my_request');
 import path = require('path');
 import url = require('url');
@@ -34,7 +34,7 @@ export default function(config: IConfig, address: string, done: (err: Error) => 
   /* Make a backup of the persistent file in case of */
   if (fileExist(persistentPath))
   {
-    fse.copySync(persistentPath, persistentPath + '.backup');
+    fs.copySync(persistentPath, persistentPath + '.backup');
   }
 
   fs.readFile(persistentPath, 'utf8', (err: Error, contents: string) =>
