@@ -53,7 +53,7 @@ function decompress(data: Buffer, done: (err: Error, result?: Buffer) => void)
 function key(subtitleId: number): Buffer
 {
   const hash = secret(20, 97, 1, 2) + magic(subtitleId);
-  const result = new Buffer(32);
+  const result = Buffer.allocUnsafe(32);
 
   result.fill(0);
   crypto.createHash('sha1').update(hash).digest().copy(result);
