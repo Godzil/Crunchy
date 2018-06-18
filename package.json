@@ -21,6 +21,7 @@
     "crunchy.sh": "./bin/crunchy.sh"
   },
   "dependencies": {
+    "@types/node": "^10.3.3",
     "big-integer": "^1.6.31",
     "bluebird": "^3.5.1",
     "cheerio": "^0.22.0",
@@ -36,14 +37,14 @@
   "devDependencies": {
     "@types/bluebird": "^3.5.20",
     "@types/cheerio": "^0.22.7",
-    "@types/fs-extra": "^5.0.2",
+    "@types/fs-extra": "^5.0.3",
     "@types/mkdirp": "^0.5.2",
-    "@types/request": "^2.47.0",
+    "@types/request": "^2.47.1",
     "@types/request-promise": "^4.1.41",
     "@types/xml2js": "^0.4.3",
     "tsconfig-lint": "^0.12.0",
     "tslint": "^5.10.0",
-    "typescript": "^2.9.1"
+    "typescript": "^2.9.2"
   },
   "scripts": {
     "prepublishOnly": "npm run build",
