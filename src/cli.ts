@@ -11,7 +11,7 @@ log.info('Crunchy version ' + current_version);
 request.get({ uri: 'https://box.godzil.net/getVersion.php?tool=crunchy&v=' + current_version },
                   (error: Error, response: any, body: any) =>
 {
-  if (response && (response.StatusCode === 200))
+  if (response && (response.statusCode === 200))
   {
     const onlinepkg = JSON.parse(body);
     if (onlinepkg.status === 'ok')
@@ -28,7 +28,7 @@ request.get({ uri: 'https://box.godzil.net/getVersion.php?tool=crunchy&v=' + cur
   }
   else
   {
-    log.info('Cannot check version.');
+    log.info('Error while checking for the current version.');
   }
 });
 
