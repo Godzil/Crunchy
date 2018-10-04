@@ -420,6 +420,7 @@ function modify(options: string|request.Options, reqMethod: string): request.Opt
     options.jar = j;
     options.headers = defaultHeaders;
     options.method = reqMethod;
+    options.followAllRedirects = true;
     return options;
   }
   return {
