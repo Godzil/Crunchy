@@ -148,6 +148,7 @@ function checkIfUserIsAuth(config: IConfig, done: (err: Error) => void): void
     if (isAuthenticated === false)
     {
         const error = $('ul.message, li.error').text();
+        log.warn('Authentication failed: ' + error);
         return done(AuthError('Authentication failed: ' + error));
     }
     else
