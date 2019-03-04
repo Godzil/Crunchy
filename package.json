@@ -15,7 +15,7 @@
   "engines": {
     "node": ">=5.0"
   },
-  "version": "1.4.5",
+  "version": "1.4.6",
   "bin": {
     "crunchy": "./bin/crunchy",
     "crunchy.sh": "./bin/crunchy.sh"
