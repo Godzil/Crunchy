@@ -4,6 +4,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/413c7ca11c0805b1ef3e/maintainability)](https://codeclimate.com/github/Godzil/Crunchy/maintainability)
 ![npm](https://img.shields.io/npm/dy/crunchy.svg)
 ![Issue Count](https://img.shields.io/github/issues/Godzil/Crunchy.svg)
+![npm](https://img.shields.io/npm/v/crunchy.svg?label=Last%20published%20version)
 
 *Crunchy* is capable of downloading *anime* episodes from the popular *CrunchyRoll* streaming service. An episode is stored in the original video format (often H.264 in a MP4 container) and the configured subtitle format (ASS or SRT).The two output files are then merged into a single MKV file.
 
