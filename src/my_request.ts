@@ -14,8 +14,6 @@ import { Response } from 'request';
 
 // tslint:disable-next-line:no-var-requires
 const cookieStore = require('tough-cookie-file-store');
-// tslint:disable-next-line:no-var-requires
-const cloudscraper = require('cloudscraper');
 
 const CR_COOKIE_DOMAIN = 'http://crunchyroll.com';
 
@@ -24,12 +22,26 @@ let isPremium = false;
 
 let j: request.CookieJar;
 
-const defaultHeaders: request.Headers =
+const defaultHeaders =
 {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
   'Connection': 'keep-alive',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
   'Referer': 'https://www.crunchyroll.com/login',
+  'Cache-Control': 'private',
+  'Accept-Language': 'en-US,en;q=0.9'
 };
+
+const defaultOptions =
+{
+  followAllRedirects: true,
+  decodeEmails: true,
+  challengesToSolve: 3,
+  gzip: true,
+};
+
+// tslint:disable-next-line:no-var-requires
+const cloudscraper = require('cloudscraper').defaults(defaultOptions);
 
 function AuthError(msg: string): IAuthError
 {
@@ -63,7 +75,7 @@ function startSession(config: IConfig): Promise<any>
   });
 }
 
-function login(config: IConfig, sessionId: string, user: string, pass: string): Promise<any>
+function APIlogin(config: IConfig, sessionId: string, user: string, pass: string): Promise<any>
 {
   return rp(
   {
@@ -96,14 +108,9 @@ function checkIfUserIsAuth(config: IConfig, done: (err: Error) => void): void
   /**
    * The main page give us some information about the user
    */
-  const options =
-  {
-    headers: defaultHeaders,
-    jar: j,
-    url: 'http://www.crunchyroll.com/',
-    method: 'GET',
-  };
-  cloudscraper.request(options, (err: Error, rep: string, body: string) =>
+  const url = 'http://www.crunchyroll.com/';
+
+  cloudscraper.get({gzip: true, uri: url}, (err: Error, rep: string, body: string) =>
   {
     if (err)
     {
@@ -149,6 +156,10 @@ function checkIfUserIsAuth(config: IConfig, done: (err: Error) => void): void
     {
         const error = $('ul.message, li.error').text();
         log.warn('Authentication failed: ' + error);
+
+        log.dumpToDebug('not auth rep', rep);
+        log.dumpToDebug('not auth body', body);
+
         return done(AuthError('Authentication failed: ' + error));
     }
     else
@@ -199,7 +210,7 @@ export function getUserAgent(): string
 /**
  * Performs a GET request for the resource.
  */
-export function get(config: IConfig, options: string|request.Options, done: (err: any, result?: string) => void)
+export function get(config: IConfig, options: string|any, done: (err: any, result?: string) => void)
 {
   if (j === undefined)
   {
@@ -218,7 +229,7 @@ export function get(config: IConfig, options: string|request.Options, done: (err
       return done(err);
     }
 
-    cloudscraper.request(modify(options, 'GET'), (error: any, response: any, body: any) =>
+    cloudscraper.get(modify(options), (error: any, response: any, body: any) =>
     {
       if (error) return done(error);
 
@@ -249,7 +260,7 @@ export function post(config: IConfig, options: request.Options, done: (err: Erro
       return done(err);
     }
 
-    cloudscraper.request(modify(options, 'POST'), (error: Error, response: any, body: any) =>
+    cloudscraper.post(modify(options), (error: Error, response: any, body: any) =>
     {
       if (error)
       {
@@ -279,7 +290,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
     }
 
     /* So if we are here now, that mean we are not authenticated so do as usual */
-    if (!config.pass || !config.user)
+    if ((!config.logUsingApi && !config.logUsingCookie) && (!config.pass || !config.user))
     {
       log.error('You need to give login/password to use Crunchy');
       process.exit(-1);
@@ -303,8 +314,8 @@ function authenticate(config: IConfig, done: (err: Error) => void)
       startSession(config)
       .then((sessionId: string) =>
       {
-        defaultHeaders.Cookie = `sess_id=${sessionId}; c_locale=enUS`;
-        return login(config, sessionId, config.user, config.pass);
+        //defaultHeaders['Cookie'] = `sess_id=${sessionId}; c_locale=enUS`;
+        return APIlogin(config, sessionId, config.user, config.pass);
       })
       .then((userData) =>
       {
@@ -349,16 +360,18 @@ function authenticate(config: IConfig, done: (err: Error) => void)
       /* First get https://www.crunchyroll.com/login to get the login token */
       const options =
       {
-        headers: defaultHeaders,
         jar: j,
-        gzip: false,
-        method: 'GET',
-        url: 'https://www.crunchyroll.com/login'
+        uri: 'https://www.crunchyroll.com/login'
       };
 
-      cloudscraper.request(options, (err: Error, rep: string, body: string) =>
+      cloudscraper.get(options, (err: Error, rep: string, body: string) =>
       {
         if (err) return done(err);
+
+        console.log('------- GET --------');
+        //console.error(err);
+        console.log(body);
+        console.log('------- /GET --------');
 
         const $ = cheerio.load(body);
 
@@ -368,11 +381,10 @@ function authenticate(config: IConfig, done: (err: Error) => void)
         {
             return done(AuthError('Can\'t find token!'));
         }
-
+        console.log("Token: " + token);
         /* Now call the page again with the token and credentials */
         const options =
         {
-          headers: defaultHeaders,
           form:
           {
             'login_form[name]': config.user,
@@ -381,15 +393,21 @@ function authenticate(config: IConfig, done: (err: Error) => void)
             'login_form[_token]': token
           },
           jar: j,
-          gzip: false,
-          method: 'POST',
           url: 'https://www.crunchyroll.com/login'
         };
 
-        cloudscraper.request(options, (err: Error, rep: string, body: string) =>
+        console.info(options);
+
+        cloudscraper.post(options, (err: Error, rep: string, body: string) =>
         {
+          console.log('------- POST --------');
+          //console.error(err);
+          console.log(body);
+          console.log('------- /POST --------');
+
           if (err)
           {
+              console.log('------- ERR --------');
               return done(err);
           }
 
@@ -398,10 +416,16 @@ function authenticate(config: IConfig, done: (err: Error) => void)
           {
             if (isAuthenticated)
             {
+              console.log('------- YES --------');
+
               return done(null);
             }
             else
             {
+
+              console.error(err);
+              console.log('------- WTF --------');
+
               return done(errCheckAuth2);
             }
           });
@@ -414,20 +438,15 @@ function authenticate(config: IConfig, done: (err: Error) => void)
 /**
  * Modifies the options to use the authenticated cookie jar.
  */
-function modify(options: string|request.Options, reqMethod: string): request.Options
+function modify(options: string|any): any
 {
   if (typeof options !== 'string')
   {
     options.jar = j;
-    options.headers = defaultHeaders;
-    options.method = reqMethod;
-    options.followAllRedirects = true;
     return options;
   }
   return {
     jar: j,
-    headers: defaultHeaders,
     url: options.toString(),
-    method: reqMethod
   };
 }
