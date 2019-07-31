@@ -368,11 +368,6 @@ function authenticate(config: IConfig, done: (err: Error) => void)
       {
         if (err) return done(err);
 
-        console.log('------- GET --------');
-        // console.error(err);
-        console.log(body);
-        console.log('------- /GET --------');
-
         const $ = cheerio.load(body);
 
         /* Get the token from the login page */
@@ -381,7 +376,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
         {
             return done(AuthError('Can\'t find token!'));
         }
-        console.log('Token: ' + token);
+
         /* Now call the page again with the token and credentials */
         const options =
         {
@@ -396,18 +391,10 @@ function authenticate(config: IConfig, done: (err: Error) => void)
           url: 'https://www.crunchyroll.com/login'
         };
 
-        console.info(options);
-
         cloudscraper.post(options, (err: Error, rep: string, body: string) =>
         {
-          console.log('------- POST --------');
-          // console.error(err);
-          console.log(body);
-          console.log('------- /POST --------');
-
           if (err)
           {
-              console.log('------- ERR --------');
               return done(err);
           }
 
@@ -416,16 +403,10 @@ function authenticate(config: IConfig, done: (err: Error) => void)
           {
             if (isAuthenticated)
             {
-              console.log('------- YES --------');
-
               return done(null);
             }
             else
             {
-
-              console.error(err);
-              console.log('------- WTF --------');
-
               return done(errCheckAuth2);
             }
           });
