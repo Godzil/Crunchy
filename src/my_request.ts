@@ -314,7 +314,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
       startSession(config)
       .then((sessionId: string) =>
       {
-        //defaultHeaders['Cookie'] = `sess_id=${sessionId}; c_locale=enUS`;
+        // defaultHeaders['Cookie'] = `sess_id=${sessionId}; c_locale=enUS`;
         return APIlogin(config, sessionId, config.user, config.pass);
       })
       .then((userData) =>
@@ -360,7 +360,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
       /* First get https://www.crunchyroll.com/login to get the login token */
       const options =
       {
-        jar: j,
+        // jar: j,
         uri: 'https://www.crunchyroll.com/login'
       };
 
@@ -369,7 +369,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
         if (err) return done(err);
 
         console.log('------- GET --------');
-        //console.error(err);
+        // console.error(err);
         console.log(body);
         console.log('------- /GET --------');
 
@@ -381,7 +381,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
         {
             return done(AuthError('Can\'t find token!'));
         }
-        console.log("Token: " + token);
+        console.log('Token: ' + token);
         /* Now call the page again with the token and credentials */
         const options =
         {
@@ -392,7 +392,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
             'login_form[redirect_url]': '/',
             'login_form[_token]': token
           },
-          jar: j,
+          // jar: j,
           url: 'https://www.crunchyroll.com/login'
         };
 
@@ -401,7 +401,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
         cloudscraper.post(options, (err: Error, rep: string, body: string) =>
         {
           console.log('------- POST --------');
-          //console.error(err);
+          // console.error(err);
           console.log(body);
           console.log('------- /POST --------');
 
