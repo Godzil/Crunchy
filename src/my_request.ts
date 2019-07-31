@@ -360,7 +360,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
       /* First get https://www.crunchyroll.com/login to get the login token */
       const options =
       {
-        jar: j,
+        //jar: j,
         uri: 'https://www.crunchyroll.com/login'
       };
 
@@ -392,7 +392,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
             'login_form[redirect_url]': '/',
             'login_form[_token]': token
           },
-          jar: j,
+          //jar: j,
           url: 'https://www.crunchyroll.com/login'
         };
 
