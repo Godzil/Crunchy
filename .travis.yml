@@ -6,8 +6,8 @@ node_js:
  - 10
  - 11
  - 12
- - 13
- - 14
+# - 13
+# - 14
 before_install:
  - npm install --only=dev
 script:
