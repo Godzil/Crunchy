@@ -198,7 +198,7 @@ function pageScrape(config: IConfig, task: IConfigTask, done: (err: any, result?
       }
 
       const $ = cheerio.load(result);
-      const title = $('span[itemprop=name]').text();
+      const title = $('meta[itemprop=name]').attr("content")
 
       if (config.debug)
       {
