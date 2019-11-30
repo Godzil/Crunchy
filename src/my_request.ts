@@ -110,7 +110,7 @@ function checkIfUserIsAuth(config: IConfig, done: (err: Error) => void): void
    */
   const url = 'http://www.crunchyroll.com/';
 
-  cloudscraper.get({gzip: true, uri: url}, (err: Error, rep: string, body: string) =>
+  cloudscraper.get({gzip: true, uri: url, jar: j}, (err: Error, rep: string, body: string) =>
   {
     if (err)
     {
@@ -338,9 +338,7 @@ function authenticate(config: IConfig, done: (err: Error) => void)
     }
     else if (config.logUsingCookie)
     {
-      j.setCookie(request.cookie('c_userid=' + config.crUserId + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'),
-                  CR_COOKIE_DOMAIN);
-      j.setCookie(request.cookie('c_userkey=' + config.crUserKey + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'),
+      j.setCookie(request.cookie('session_id=' + config.crSessionId + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'),
                   CR_COOKIE_DOMAIN);
 
       checkIfUserIsAuth(config, (errCheckAuth2) =>
