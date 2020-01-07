@@ -12,23 +12,14 @@ import subtitle from '../subtitle/index';
 export default function(config: IConfig, isSubtitled: boolean, rtmpInputPath: string, filePath: string,
                         streamMode: string, verbose: boolean, done: (err: Error) => void)
 {
-  const subtitlePath = filePath + '.' + (subtitle.formats[config.format] ? config.format : 'ass');
-  let videoPath = filePath;
-  let cp;
+  const subtitleFormat = (subtitle.formats[config.format] ? config.format : 'ass');
+  const subtitlePath = filePath + '.' + subtitleFormat;
+  const videoPath = filePath + (streamMode === 'RTMP' ? path.extname(rtmpInputPath) : '.mp4');
 
-  if (streamMode === 'RTMP')
-  {
-    videoPath += path.extname(rtmpInputPath);
-  }
-  else
-  {
-    videoPath += '.mp4';
-  }
+  const cmd = `${command()} -y -i "${videoPath}" ${(isSubtitled ? `-i "${subtitlePath}"` : '')} ` +
+              `-c copy -c:s ${subtitleFormat} -disposition:s:0 default "${filePath}.mkv"`;
 
-  cp = childProcess.exec(command() + ' ' +
-        '-o "' + filePath + '.mkv" ' +
-        '"' + videoPath + '" ' +
-        (isSubtitled ? '"' + subtitlePath + '"' : ''), {
+  const cp = childProcess.exec(cmd, {
         maxBuffer: Infinity,
   }, (err) =>
   {
@@ -48,9 +39,8 @@ export default function(config: IConfig, isSubtitled: boolean, rtmpInputPath: st
     });
   });
 
-  if (verbose === true)
+  if (verbose)
   {
-    cp.stdin.pipe(process.stdin);
     cp.stdout.pipe(process.stdout);
     cp.stderr.pipe(process.stderr);
   }
@@ -63,10 +53,10 @@ function command(): string
 {
   if (os.platform() !== 'win32')
   {
-      return 'mkvmerge';
+      return 'ffmpeg';
   }
 
-  return '"' + path.join(__dirname, '../../bin/mkvmerge.exe') + '"';
+  return '"' + path.join(__dirname, '../../bin/ffmpeg.exe') + '"';
 }
 
 /**
