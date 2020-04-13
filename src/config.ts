@@ -45,6 +45,27 @@ export function save(config: IConfig)
   tmp.args = undefined;
   tmp.commands = undefined;
   tmp._allowUnknownOption = undefined;
+  tmp.parent = undefined;
+  tmp._scriptPath = undefined;
+  tmp._optionValues = undefined;
+  tmp._storeOptionsAsProperties = undefined;
+  tmp._passCommandToAction = undefined;
+  tmp._actionResults = undefined;
+  tmp._actionHandler = undefined;
+  tmp._executableHandler = undefined;
+  tmp._executableFile = undefined;
+  tmp._defaultCommandName = undefined;
+  tmp._exitCallback = undefined;
+  tmp._alias = undefined;
+  tmp._noHelp = undefined;
+  tmp._helpFlags = undefined;
+  tmp._helpDescription = undefined;
+  tmp._helpShortFlag = undefined;
+  tmp._helpLongFlag = undefined;
+  tmp._hasImplicitHelpCommand = undefined;
+  tmp._helpCommandName = undefined;
+  tmp._helpCommandnameAndArgs = undefined;
+  tmp._helpCommandDescription = undefined;
 
   // Things we don't want to save
   tmp.cache = undefined;
