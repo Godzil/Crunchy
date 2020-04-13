@@ -72,7 +72,7 @@ function sanitiseFileName(str: string)
 /**
  * Downloads the subtitle and video.
  */
-function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, done: (err: Error, ign: boolean) => void)
+function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, done: (err: Error | string, ign: boolean) => void)
 {
   const serieFolder = sanitiseFileName(config.series || page.series);
 
@@ -109,14 +109,9 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
     return done(null, true);
   }
 
-  mkdirp(path.dirname(filePath), (errM: Error) =>
+  const ret = mkdirp(path.dirname(filePath));
+  if (ret)
   {
-    if (errM)
-    {
-      log.dispEpisode(fileName, 'Error...', true);
-      return done(errM, false);
-    }
-
     log.dispEpisode(fileName, 'Fetching...', false);
     downloadSubtitle(config, player, filePath, (errDS) =>
     {
@@ -164,13 +159,18 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
         done(null, true);
       }
     });
-  });
+  }
+  else
+  {
+    log.dispEpisode(fileName, 'Error creating folder \'" + filePath + "\'...', true);
+    return done('Cannot create folder', false);
+  }
 }
 
 /**
  * Saves the subtitles to disk.
  */
-function downloadSubtitle(config: IConfig, player: IEpisodePlayer, filePath: string, done: (err?: Error) => void)
+function downloadSubtitle(config: IConfig, player: IEpisodePlayer, filePath: string, done: (err?: Error | string) => void)
 {
   const enc = player.subtitle;
 

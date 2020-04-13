@@ -366,6 +366,6 @@ function parse(args: string[]): IConfigLine
     .option('--verbose', 'Make tool verbose')
     .option('--debug', 'Create a debug file. Use only if requested!')
     .option('--rebuildcrp', 'Rebuild the crpersistant file.')
-    .option('--retry <i>', 'Number or time to retry fetching an episode.', 5)
+    .option('--retry <i>', 'Number or time to retry fetching an episode.', '5')
     .parse(args);
 }
