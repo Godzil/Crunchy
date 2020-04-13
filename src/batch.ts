@@ -200,7 +200,7 @@ function split(value: string): string[]
   return pieces;
 }
 
-function get_min_filter(filter: string): number
+function get_min_filter(filter: string): IEpisodeNumber
 {
   if (filter !== undefined)
   {
@@ -214,13 +214,41 @@ function get_min_filter(filter: string): number
 
     if (tok[0] !== '')
     {
-      return parseInt(tok[0], 10);
+      /* If first item is not empty, ie '10-20' */
+      if (tok[0].includes('e'))
+      {
+        /* include a e so we probably have something like 5e10
+           aka season 5 episode 10
+         */
+        const tok2 = tok[0].split('else');
+        if (tok2.length > 2)
+        {
+          log.error('Invalid episode filter \'' + filter + '\'');
+          process.exit(-1);
+        }
+
+        if (tok[0] !== '')
+        {
+          /* So season is properly filled */
+          return {season: parseInt(tok2[0], 10), episode: parseInt(tok2[1], 10)};
+        }
+        else
+        {
+          /* we have 'e10' */
+          return {season: 0, episode: parseInt(tok2[1], 10)};
+        }
+      }
+      else
+      {
+        return {season: 0, episode: parseInt(tok[0], 10)};
+      }
     }
   }
-  return 0;
+  /* First item is empty, ie '-20' */
+  return {season: 0, episode: 0};
 }
 
-function get_max_filter(filter: string): number
+function get_max_filter(filter: string): IEpisodeNumber
 {
   if (filter !== undefined)
   {
@@ -235,15 +263,15 @@ function get_max_filter(filter: string): number
     if ((tok.length > 1) && (tok[1] !== ''))
     {
       /* We have a max value */
-      return parseInt(tok[1], 10);
+      return  {season: +Infinity, episode: parseInt(tok[1], 10)};
     }
     else if ((tok.length === 1) && (tok[0] !== ''))
     {
       /* A single episode has been requested */
-      return parseInt(tok[0], 10);
+      return  {season: +Infinity, episode: parseInt(tok[0], 10) + 1};
     }
   }
-  return +Infinity;
+  return  {season: +Infinity, episode: +Infinity};
 }
 
 /**
@@ -290,7 +318,7 @@ function tasks(config: IConfigLine, batchPath: string, done: (err: Error, tasks?
                 episode_min: get_min_filter(config.episodes), episode_max: get_max_filter(config.episodes)};
       }
 
-      return {address: '', retry: 0, episode_min: 0, episode_max: 0};
+      return {address: '', retry: 0, episode_min: {season: 0, episode: 0}, episode_max: {season: 0, episode: 0}};
     }));
   }
 
@@ -366,6 +394,6 @@ function parse(args: string[]): IConfigLine
     .option('--verbose', 'Make tool verbose')
     .option('--debug', 'Create a debug file. Use only if requested!')
     .option('--rebuildcrp', 'Rebuild the crpersistant file.')
-    .option('--retry <i>', 'Number or time to retry fetching an episode.', 5)
+    .option('--retry <i>', 'Number or time to retry fetching an episode.', '5')
     .parse(args);
 }

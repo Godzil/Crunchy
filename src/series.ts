@@ -144,9 +144,10 @@ function download(cache: {[address: string]: number}, config: IConfig,
                   done: (err: any, ign: boolean) => void)
 {
   const episodeNumber = parseInt(item.episode, 10);
+  const seasonNumber = item.volume;
 
-  if ( (episodeNumber < task.episode_min) ||
-       (episodeNumber > task.episode_max) )
+  if ( (episodeNumber < task.episode_min.episode) ||
+       (episodeNumber > task.episode_max.episode) )
   {
     return done(null, false);
   }

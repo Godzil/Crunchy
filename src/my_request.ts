@@ -22,26 +22,10 @@ let isPremium = false;
 
 let j: request.CookieJar;
 
-const defaultHeaders =
-{
-  'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
-  'Connection': 'keep-alive',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
-  'Referer': 'https://www.crunchyroll.com/login',
-  'Cache-Control': 'private',
-  'Accept-Language': 'en-US,en;q=0.9'
-};
-
-const defaultOptions =
-{
-  followAllRedirects: true,
-  decodeEmails: true,
-  challengesToSolve: 3,
-  gzip: true,
-};
-
 // tslint:disable-next-line:no-var-requires
-const cloudscraper = require('cloudscraper').defaults(defaultOptions);
+import cloudscraper = require('cloudscraper');
+let currentOptions: any;
+let optionsSet = false;
 
 function AuthError(msg: string): IAuthError
 {
@@ -98,19 +82,14 @@ function APIlogin(config: IConfig, sessionId: string, user: string, pass: string
   });
 }
 
-function checkIfUserIsAuth(config: IConfig, done: (err: Error) => void): void
+function checkIfUserIsAuth(config: IConfig, done: (err: any) => void): void
 {
-  if (j === undefined)
-  {
-    loadCookies(config);
-  }
-
   /**
    * The main page give us some information about the user
    */
   const url = 'http://www.crunchyroll.com/';
 
-  cloudscraper.get({gzip: true, uri: url, jar: j}, (err: Error, rep: string, body: string) =>
+  cloudscraper.get(url, getOptions(config, null), (err: any, rep: Response, body: string) =>
   {
     if (err)
     {
@@ -204,24 +183,14 @@ export function eatCookies(config: IConfig)
 
 export function getUserAgent(): string
 {
-  return defaultHeaders['User-Agent'];
+  return currentOptions.headers['User-Agent'];
 }
 
 /**
  * Performs a GET request for the resource.
  */
-export function get(config: IConfig, options: string|any, done: (err: any, result?: string) => void)
+export function get(config: IConfig, url: string, done: (err: any, result?: string) => void)
 {
-  if (j === undefined)
-  {
-    loadCookies(config);
-  }
-
-  if (config.userAgent)
-  {
-    defaultHeaders['User-Agent'] = config.userAgent;
-  }
-
   authenticate(config, (err) =>
   {
     if (err)
@@ -229,7 +198,7 @@ export function get(config: IConfig, options: string|any, done: (err: any, resul
       return done(err);
     }
 
-    cloudscraper.get(modify(options), (error: any, response: any, body: any) =>
+    cloudscraper.get(url, getOptions(config, null), (error: any, response: any, body: any) =>
     {
       if (error) return done(error);
 
@@ -241,18 +210,8 @@ export function get(config: IConfig, options: string|any, done: (err: any, resul
 /**
  * Performs a POST request for the resource.
  */
-export function post(config: IConfig, options: request.Options, done: (err: Error, result?: string) => void)
+export function post(config: IConfig, url: string, form: any, done: (err: any, result?: string) => void)
 {
-  if (j === undefined)
-  {
-    loadCookies(config);
-  }
-
-  if (config.userAgent)
-  {
-    defaultHeaders['User-Agent'] = config.userAgent;
-  }
-
   authenticate(config, (err) =>
   {
     if (err)
@@ -260,7 +219,7 @@ export function post(config: IConfig, options: request.Options, done: (err: Erro
       return done(err);
     }
 
-    cloudscraper.post(modify(options), (error: Error, response: any, body: any) =>
+    cloudscraper.post(url, getOptions(config, form), (error: Error, response: any, body: any) =>
     {
       if (error)
       {
@@ -271,10 +230,128 @@ export function post(config: IConfig, options: request.Options, done: (err: Erro
   });
 }
 
+function authUsingCookies(config: IConfig, done: (err: any) => void)
+{
+  j.setCookie(request.cookie('session_id=' + config.crSessionId + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'),
+                  CR_COOKIE_DOMAIN);
+
+  checkIfUserIsAuth(config, (errCheckAuth2) =>
+  {
+    if (isAuthenticated)
+    {
+      return done(null);
+    }
+    else
+    {
+      return done(errCheckAuth2);
+    }
+  });
+}
+
+function authUsingApi(config: IConfig, done: (err: any) => void)
+{
+  if (!config.pass || !config.user)
+  {
+    log.error('You need to give login/password to use Crunchy');
+    process.exit(-1);
+  }
+
+  if (config.crDeviceId === undefined)
+  {
+    config.crDeviceId = uuid.v4();
+  }
+
+  if (!config.crSessionUrl || !config.crDeviceType || !config.crAPIVersion ||
+    !config.crLocale || !config.crLoginUrl)
+  {
+    return done(AuthError('Invalid API configuration, please check your config file.'));
+  }
+
+  startSession(config)
+    .then((sessionId: string) =>
+    {
+      // defaultHeaders['Cookie'] = `sess_id=${sessionId}; c_locale=enUS`;
+      return APIlogin(config, sessionId, config.user, config.pass);
+    })
+    .then((userData) =>
+    {
+      checkIfUserIsAuth(config, (errCheckAuth2) =>
+      {
+        if (isAuthenticated)
+        {
+          return done(null);
+        }
+        else
+        {
+          return done(errCheckAuth2);
+        }
+      });
+    })
+    .catch((errInChk) =>
+    {
+      return done(AuthError(errInChk.message));
+    });
+}
+
+function authUsingForm(config: IConfig, done: (err: any) => void)
+{
+  /* So if we are here now, that mean we are not authenticated so do as usual */
+  if (!config.pass || !config.user)
+  {
+    log.error('You need to give login/password to use Crunchy');
+    process.exit(-1);
+  }
+
+  /* First get https://www.crunchyroll.com/login to get the login token */
+  cloudscraper.get('https://www.crunchyroll.com/login', getOptions(config, null), (err: any, rep: Response, body: string) =>
+  {
+    if (err) return done(err);
+
+    const $ = cheerio.load(body);
+
+    /* Get the token from the login page */
+    const token = $('input[name="login_form[_token]"]').attr('value');
+    if (token === '')
+    {
+      return done(AuthError('Can\'t find token!'));
+    }
+
+    /* Now call the page again with the token and credentials */
+    const paramForm =
+    {
+            'login_form[name]': config.user,
+            'login_form[password]': config.pass,
+            'login_form[redirect_url]': '/',
+            'login_form[_token]': token
+    };
+
+    cloudscraper.post('https://www.crunchyroll.com/login', getOptions(config, paramForm), (err: any, rep: Response, body: string) =>
+    {
+      if (err)
+      {
+        return done(err);
+      }
+
+      /* Now let's check if we are authentificated */
+      checkIfUserIsAuth(config, (errCheckAuth2) =>
+      {
+        if (isAuthenticated)
+        {
+          return done(null);
+        }
+        else
+        {
+          return done(errCheckAuth2);
+        }
+      });
+    });
+  });
+}
+
 /**
  * Authenticates using the configured pass and user.
  */
-function authenticate(config: IConfig, done: (err: Error) => void)
+function authenticate(config: IConfig, done: (err: any) => void)
 {
   if (isAuthenticated)
   {
@@ -289,143 +366,57 @@ function authenticate(config: IConfig, done: (err: Error) => void)
       return done(null);
     }
 
-    /* So if we are here now, that mean we are not authenticated so do as usual */
-    if ((!config.logUsingApi && !config.logUsingCookie) && (!config.pass || !config.user))
-    {
-      log.error('You need to give login/password to use Crunchy');
-      process.exit(-1);
-    }
-
     log.info('Seems we are not currently logged. Let\'s login!');
 
     if (config.logUsingApi)
     {
-      if (config.crDeviceId === undefined)
-      {
-        config.crDeviceId = uuid.v4();
-      }
-
-      if (!config.crSessionUrl || !config.crDeviceType || !config.crAPIVersion ||
-          !config.crLocale || !config.crLoginUrl)
-      {
-        return done(AuthError('Invalid API configuration, please check your config file.'));
-      }
-
-      startSession(config)
-      .then((sessionId: string) =>
-      {
-        // defaultHeaders['Cookie'] = `sess_id=${sessionId}; c_locale=enUS`;
-        return APIlogin(config, sessionId, config.user, config.pass);
-      })
-      .then((userData) =>
-      {
-        checkIfUserIsAuth(config, (errCheckAuth2) =>
-        {
-          if (isAuthenticated)
-          {
-            return done(null);
-          }
-          else
-          {
-            return done(errCheckAuth2);
-          }
-        });
-      })
-      .catch((errInChk) =>
-      {
-        return done(AuthError(errInChk.message));
-      });
+      return authUsingApi(config, done);
     }
     else if (config.logUsingCookie)
     {
-      j.setCookie(request.cookie('session_id=' + config.crSessionId + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'),
-                  CR_COOKIE_DOMAIN);
-
-      checkIfUserIsAuth(config, (errCheckAuth2) =>
-      {
-        if (isAuthenticated)
-        {
-          return done(null);
-        }
-        else
-        {
-          return done(errCheckAuth2);
-        }
-      });
+      return authUsingCookies(config, done);
     }
     else
     {
-      /* First get https://www.crunchyroll.com/login to get the login token */
-      const options =
-      {
-        // jar: j,
-        uri: 'https://www.crunchyroll.com/login'
-      };
-
-      cloudscraper.get(options, (err: Error, rep: string, body: string) =>
-      {
-        if (err) return done(err);
-
-        const $ = cheerio.load(body);
-
-        /* Get the token from the login page */
-        const token = $('input[name="login_form[_token]"]').attr('value');
-        if (token === '')
-        {
-            return done(AuthError('Can\'t find token!'));
-        }
-
-        /* Now call the page again with the token and credentials */
-        const options =
-        {
-          form:
-          {
-            'login_form[name]': config.user,
-            'login_form[password]': config.pass,
-            'login_form[redirect_url]': '/',
-            'login_form[_token]': token
-          },
-          // jar: j,
-          url: 'https://www.crunchyroll.com/login'
-        };
-
-        cloudscraper.post(options, (err: Error, rep: string, body: string) =>
-        {
-          if (err)
-          {
-              return done(err);
-          }
-
-          /* Now let's check if we are authentificated */
-          checkIfUserIsAuth(config, (errCheckAuth2) =>
-          {
-            if (isAuthenticated)
-            {
-              return done(null);
-            }
-            else
-            {
-              return done(errCheckAuth2);
-            }
-          });
-        });
-      });
+      return authUsingForm(config, done);
     }
   });
 }
 
-/**
- * Modifies the options to use the authenticated cookie jar.
- */
-function modify(options: string|any): any
+function getOptions(config: IConfig, form: any)
 {
-  if (typeof options !== 'string')
+  if (!optionsSet)
   {
-    options.jar = j;
-    return options;
+    currentOptions = {};
+    currentOptions.headers = {};
+
+    if (config.userAgent)
+    {
+      currentOptions.headers['User-Agent'] = config.userAgent;
+    }
+    else
+    {
+      currentOptions.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0';
+    }
+
+    if (j === undefined)
+    {
+      loadCookies(config);
+    }
+
+    currentOptions.decodeEmails = true;
+    currentOptions.jar = j;
+
+    optionsSet = true;
   }
-  return {
-    jar: j,
-    url: options.toString(),
-  };
+
+  currentOptions.form = {};
+
+  if (form !== null)
+  {
+    currentOptions.form = form;
+  }
+
+
+  return currentOptions;
 }
