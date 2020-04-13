@@ -336,15 +336,15 @@ function scrapePlayer(config: IConfig, address: string, id: number, done: (err: 
     return done(new Error('Invalid address.'));
   }
 
-  my_request.post(config, {
-    form: {
-      current_page: address,
-      video_format: config.video_format,
-      video_quality: config.video_quality,
-      media_id: id
-    },
-    url: url[1] + '/xml/?req=RpcApiVideoPlayer_GetStandardConfig&media_id=' + id,
-  }, (err, result) =>
+  const postForm = {
+    current_page: address,
+    video_format: config.video_format,
+    video_quality: config.video_quality,
+    media_id: id
+  };
+
+  my_request.post(config, url[1] + '/xml/?req=RpcApiVideoPlayer_GetStandardConfig&media_id=' + id, postForm,
+    (err, result) =>
   {
     if (err)
     {
