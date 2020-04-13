@@ -232,10 +232,8 @@ export function post(config: IConfig, url: string, form: any, done: (err: any, r
 
 function authUsingCookies(config: IConfig, done: (err: any) => void)
 {
-  j.setCookie(request.cookie('c_userid=' + config.crUserId + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'),
-    CR_COOKIE_DOMAIN);
-  j.setCookie(request.cookie('c_userkey=' + config.crUserKey + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'),
-    CR_COOKIE_DOMAIN);
+  j.setCookie(request.cookie('session_id=' + config.crSessionId + '; Domain=crunchyroll.com; HttpOnly; hostOnly=false;'),
+                  CR_COOKIE_DOMAIN);
 
   checkIfUserIsAuth(config, (errCheckAuth2) =>
   {
