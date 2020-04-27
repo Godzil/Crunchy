@@ -396,6 +396,8 @@ function scrapePage(config: IConfig, address: string, done: (err: Error, page?: 
       if (pageMetadata.partOfSeason)
       {
         seasonNumber = pageMetadata.partOfSeason.seasonNumber;
+        if (seasonNumber === '0') { seasonNumber = '1'; }
+
         seasonTitle = pageMetadata.partOfSeason.name;
       }
       done(null, vlos.getMedia(script, seasonTitle, seasonNumber));
