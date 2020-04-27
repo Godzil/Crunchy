@@ -7,4 +7,5 @@ interface IEpisodePage {
   title: string;
   swf: string;
   filename: string;
+  media: IVlosScript;
 }

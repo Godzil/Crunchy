@@ -5,6 +5,7 @@ import mkdirp = require('mkdirp');
 import my_request = require('./my_request');
 import path = require('path');
 import subtitle from './subtitle/index';
+import vlos from './vlos';
 import video from './video/index';
 import xml2js = require('xml2js');
 import log  = require('./log');
@@ -21,15 +22,24 @@ export default function(config: IConfig, address: string, done: (err: Error, ign
       return done(err, false);
     }
 
-    scrapePlayer(config, address, page.id, (errS, player) =>
+    if (page.media != null)
     {
-      if (errS)
+      /* No player to scrape */
+      download(config, page, null, done);
+    }
+    else
+    {
+      /* The old way */
+      scrapePlayer(config, address, page.id, (errS, player) =>
       {
-        return done(errS, false);
-      }
+        if (errS)
+        {
+          return done(errS, false);
+        }
 
-      download(config, page, player, done);
-    });
+        download(config, page, player, done);
+      });
+    }
   });
 }
 
@@ -115,7 +125,7 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
   if (ret)
   {
     log.dispEpisode(fileName, 'Fetching...', false);
-    downloadSubtitle(config, player, filePath, (errDS) =>
+    downloadSubtitle(config, page, player, filePath, (errDS) =>
     {
       if (errDS)
       {
@@ -124,7 +134,8 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
       }
 
       const now = Date.now();
-      if (player.video.file !== undefined)
+      if ( ((page.media === null) && (player.video.file !== undefined))
+        || ((page.media !== null) /* Do they still create page in advance for unreleased episodes? */) )
       {
         log.dispEpisode(fileName, 'Fetching video...', false);
         downloadVideo(config, page, player, filePath, (errDV) =>
@@ -140,10 +151,28 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
             return complete(fileName, 'Finished!', now, done);
           }
 
-          const isSubtited = Boolean(player.subtitle);
+          let isSubtitled = true;
+
+          if (page.media === null)
+          {
+            isSubtitled = Boolean(player.subtitle);
+          }
+          else
+          {
+            if (page.media.subtitles.length === 0)
+            {
+              isSubtitled = false;
+            }
+          }
+
+          let videoExt = '.mp4';
+          if ( (page.media === null) && (player.video.mode === 'RTMP'))
+          {
+            videoExt = path.extname(player.video.file);
+          }
 
           log.dispEpisode(fileName, 'Merging...', false);
-          video.merge(config, isSubtited, player.video.file, filePath, player.video.mode, config.verbose, (errVM) =>
+          video.merge(config, isSubtitled, videoExt, filePath, config.verbose, (errVM) =>
           {
             if (errVM)
             {
@@ -164,7 +193,7 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
   }
   else
   {
-    log.dispEpisode(fileName, 'Error creating folder \'" + filePath + "\'...', true);
+    log.dispEpisode(fileName, 'Error creating folder \'' + filePath + '\'...', true);
     return done('Cannot create folder', false);
   }
 }
@@ -172,50 +201,125 @@ function download(config: IConfig, page: IEpisodePage, player: IEpisodePlayer, d
 /**
  * Saves the subtitles to disk.
  */
-function downloadSubtitle(config: IConfig, player: IEpisodePlayer, filePath: string, done: (err?: Error | string) => void)
+function downloadSubtitle(config: IConfig, page: IEpisodePage, player: IEpisodePlayer,
+                          filePath: string, done: (err?: Error | string) => void)
 {
-  const enc = player.subtitle;
-
-  if (!enc)
+  if (page.media !== null)
   {
-    return done();
-  }
-
-  subtitle.decode(enc.id, enc.iv, enc.data, (errSD, data) =>
-  {
-    if (errSD)
+    const subs = page.media.subtitles;
+    if (subs.length === 0)
     {
-      return done(errSD);
+      /* No downloadable subtitles */
+      console.warn('Can\'t find subtitle ?!');
+      return done();
     }
 
-    if (config.debug)
-    {
-      log.dumpToDebug('SubtitlesXML', data);
-    }
+    let i;
+    let j;
 
-    const formats = subtitle.formats;
-    const format = formats[config.format] ? config.format : 'ass';
-
-    formats[format](config, data, (errF: Error, decodedSubtitle: string) =>
+    /* Find a proper subtitles */
+    for (j = 0; j < config.sublang.length; j++)
     {
-      if (errF)
+      const reqSubLang = config.sublang[j];
+      for (i = 0; i < subs.length; i++)
       {
-        return done(errF);
+        const curSub = subs[i];
+        if (curSub.format === 'ass' && curSub.language === reqSubLang)
+        {
+          my_request.get(config, curSub.url, (err, result) =>
+          {
+            if (err)
+            {
+              log.error('An error occured while fetching subtitles...');
+              return done(err);
+            }
+
+            fs.writeFile(filePath + '.ass', '\ufeff' + result, done);
+          });
+
+          /* Break from the first loop */
+          j = config.sublang.length;
+          break;
+        }
+      }
+    }
+    if (i >= subs.length)
+    {
+      done('Cannot find subtitles with requested language(s)');
+    }
+  }
+  else
+  {
+    const enc = player.subtitle;
+
+    if (!enc)
+    {
+      return done();
+    }
+
+    subtitle.decode(enc.id, enc.iv, enc.data, (errSD, data) =>
+    {
+      if (errSD)
+      {
+        log.error('An error occured while getting subtitles...');
+        return done(errSD);
       }
 
-      fs.writeFile(filePath + '.' + format, '\ufeff' + decodedSubtitle, done);
+      if (config.debug)
+      {
+        log.dumpToDebug('SubtitlesXML', data);
+      }
+
+      const formats = subtitle.formats;
+      const format = formats[config.format] ? config.format : 'ass';
+
+      formats[format](config, data, (errF: Error, decodedSubtitle: string) =>
+      {
+        if (errF)
+        {
+          return done(errF);
+        }
+
+        fs.writeFile(filePath + '.' + format, '\ufeff' + decodedSubtitle, done);
+      });
     });
-  });
+  }
 }
 
 /**
  * Streams the video to disk.
  */
 function downloadVideo(config: IConfig,  page: IEpisodePage, player: IEpisodePlayer,
-                       filePath: string, done: (err: Error) => void)
+                       filePath: string, done: (err: any) => void)
 {
-  video.stream(player.video.host, player.video.file, page.swf, filePath,
-               path.extname(player.video.file), player.video.mode, config.verbose, done);
+  if (player == null)
+  {
+    /* new way */
+
+    const streams = page.media.streams;
+    let i;
+    /* Find a proper subtitles */
+    for (i = 0; i < streams.length; i++)
+    {
+      if (streams[i].format === 'vo_adaptive_hls' && streams[i].audio_lang === 'jaJP' &&
+          streams[i].hardsub_lang === null)
+      {
+        video.stream('', streams[i].url, '', filePath,
+          'mp4', 'HLS', config.verbose, done);
+        break;
+      }
+    }
+    if (i >= streams.length)
+    {
+      done('Cannot find a valid stream');
+    }
+  }
+  else
+  {
+    /* Old way */
+    video.stream(player.video.host, player.video.file, page.swf, filePath,
+                 path.extname(player.video.file), player.video.mode, config.verbose, done);
+  }
 }
 
 /**
@@ -277,51 +381,71 @@ function scrapePage(config: IConfig, address: string, done: (err: Error, page?: 
     }
 
     const $ = cheerio.load(result);
-    const swf = /^([^?]+)/.exec($('link[rel=video_src]').attr('href'));
-    const regexp = /\s*([^\n\r\t\f]+)\n?\s*[^0-9]*([0-9][\-0-9.]*)?,?\n?\s\s*[^0-9]*((PV )?[S0-9][P0-9.]*[a-fA-F]?)/;
-    const look = $('#showmedia_about_media').text();
-    const seasonTitle = $('span[itemprop="title"]').text();
-    const episodeTitle = $('#showmedia_about_name').text().replace(/[“”]/g, '');
-    const data = regexp.exec(look);
+    /* First check if we have the new player */
+    const vlosScript = $('#vilos-iframe-container');
 
-    if (config.debug)
+    if (vlosScript)
     {
-      log.dumpToDebug('episode page', $.html());
-    }
+      const pageMetadata = JSON.parse($('script[type="application/ld+json"]')[0].children[0].data);
+      const divScript = $('div[id="showmedia_video_box_wide"]');
+      const scripts = divScript.find('script').toArray();
+      const script = scripts[2].children[0].data;
+      let seasonNumber = '1';
+      let seasonTitle = '';
 
-    if (!swf || !data)
-    {
-      log.warn('Somethig unexpected in the page at ' + address + ' (data are: ' + look + ')');
-      log.warn('Setting Season to ’0’ and episode to ’0’...');
-
-      if (config.debug)
+      if (pageMetadata.partOfSeason)
       {
-        log.dumpToDebug('episode unexpected', look);
+        seasonNumber = pageMetadata.partOfSeason.seasonNumber;
+        seasonTitle = pageMetadata.partOfSeason.name;
       }
-
-      done(null, {
-        episode: '0',
-        id: epId,
-        series: seasonTitle,
-        season: seasonTitle,
-        title: episodeTitle,
-        swf: swf[1],
-        volume: '0',
-        filename: '',
-      });
+      done(null, vlos.getMedia(script, seasonTitle, seasonNumber));
     }
     else
     {
-      done(null, {
-        episode: data[3],
-        id: epId,
-        series: data[1],
-        season: seasonTitle,
-        title: episodeTitle,
-        swf: swf[1],
-        volume: data[2] || '1',
-        filename: '',
-      });
+      /* Use the old way */
+      const swf = /^([^?]+)/.exec($('link[rel=video_src]').attr('href'));
+      const regexp = /\s*([^\n\r\t\f]+)\n?\s*[^0-9]*([0-9][\-0-9.]*)?,?\n?\s\s*[^0-9]*((PV )?[S0-9][P0-9.]*[a-fA-F]?)/;
+      const seasonTitle = $('span[itemprop="title"]').text();
+      const look = $('#showmedia_about_media').text();
+      const episodeTitle = $('#showmedia_about_name').text().replace(/[“”]/g, '');
+      const data = regexp.exec(look);
+
+      if (config.debug) {
+        log.dumpToDebug('episode page', $.html());
+      }
+
+      if (!swf || !data) {
+        log.warn('Somethig unexpected in the page at ' + address + ' (data are: ' + look + ')');
+        log.warn('Setting Season to ’0’ and episode to ’0’...');
+
+        if (config.debug) {
+          log.dumpToDebug('episode unexpected', look);
+        }
+
+        done(null, {
+          episode: '0',
+          id: epId,
+          series: seasonTitle,
+          season: seasonTitle,
+          title: episodeTitle,
+          swf: swf[1],
+          volume: '0',
+          filename: '',
+          media: null,
+        });
+      } else {
+        done(null, {
+          episode: data[3],
+          id: epId,
+          series: data[1],
+          season: seasonTitle,
+          title: episodeTitle,
+          swf: swf[1],
+          volume: data[2] || '1',
+          filename: '',
+          media: null,
+        });
+      }
     }
   });
 }

@@ -379,6 +379,10 @@ function tasks(config: IConfigLine, batchPath: string, done: (err: Error, tasks?
   });
 }
 
+function commaSeparatedList(value: any, dummyPrevious: any) {
+  return value.split(',');
+}
+
 /**
  * Parses the arguments and returns a configuration.
  */
@@ -396,6 +400,8 @@ function parse(args: string[]): IConfigLine
     .option('-e, --episodes <s>', 'Episode list. Read documentation on how to use')
     // Settings
     .option('-l, --crlang <s>', 'CR page language (valid: en, fr, es, it, pt, de, ru).')
+    .option('-s, --sublang <items>', 'Select the subtitle languages, multiple value separated by a comma ' +
+                  'are accepted (like: frFR,enUS )', commaSeparatedList)
     .option('-f, --format <s>', 'The subtitle format.', 'ass')
     .option('-o, --output <s>', 'The output path.')
     .option('-s, --series <s>', 'The series name override.')
