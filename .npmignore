@@ -1,4 +1,4 @@
-extra/
+extras/
 node_modules/
 src/
 ts.js
@@ -6,5 +6,7 @@ tsconfig.json
 tsd.json
 tslint.json
 .idea/
+.github/
 test/
 config.json
+.travis.yml 
