@@ -25,9 +25,9 @@ export function localeToCC(locale: string): string
 
 const dubignore_regexp: { [id: string]: RegExp; } =
 {
-  en: /\(.*Dub(?:bed)?.*\)|(?:\(RU\))/i,
-  fr: /\(.*Dub(?:bed)?.*\)|(?:\(RU\))|\(?Doublage.*\)?/,
-  de: /\(.*isch\)|\(Dubbed\)|\(RU\)/
+  en: /\(.*Dub(?:bed)?.*\)|(?:\(RU\))|\(Russian\)/i,
+  fr: /\(.*Dub(?:bed)?.*\)|(?:\(RU\))|\(?Doublage.*\)|\(Russian\)?/,
+  de: /\(.*isch\)|\(Dubbed\)|\(RU\)|\(Russian\)/
 };
 
 export function get_diregexp(config: IConfig): RegExp
