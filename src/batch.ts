@@ -170,7 +170,7 @@ export default function(args: string[], done: (err?: Error) => void)
         {
           i += 1;
         }
-        next();
+        setTimeout(next, config.sleepTime);
       });
     })();
   });
@@ -405,5 +405,6 @@ function parse(args: string[]): IConfigLine
     .option('--debug', 'Create a debug file. Use only if requested!')
     .option('--rebuildcrp', 'Rebuild the crpersistant file.')
     .option('--retry <i>', 'Number or time to retry fetching an episode.', '5')
+    .option('--sleepTime <i>', 'Minimum wait time between each http requests.')
     .parse(args);
 }

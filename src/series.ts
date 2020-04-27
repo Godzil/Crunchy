@@ -106,7 +106,8 @@ export default function(config: IConfig, task: IConfigTask, done: (err: any) => 
                            '" - Retry ' + page.episodes[i].retry + ' / ' + config.retry);
               page.episodes[i].retry -= 1;
             }
-            next();
+            setTimeout(next, config.sleepTime);
+            return;
           }
           else
           {
@@ -121,13 +122,15 @@ export default function(config: IConfig, task: IConfigTask, done: (err: any) => 
                 }
 
                 i += 1;
-                next();
+                setTimeout(next, config.sleepTime);
+                return;
               });
             }
             else
             {
               i += 1;
-              next();
+              setTimeout(next, config.sleepTime);
+              return;
             }
           }
         });

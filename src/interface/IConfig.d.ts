@@ -24,6 +24,7 @@ interface IConfig {
   debug?: boolean;
   unlog?: boolean;
   retry?: number;
+  sleepTime?: number;
   // Login options
   userAgent?: string;
   logUsingApi?: boolean;
