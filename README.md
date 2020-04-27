@@ -79,7 +79,6 @@ The [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface
         -e, --episodes <s>    Episode list. Read documentation on how to use
         -f, --format <s>      The subtitle format. (default: ass)
         -o, --output <s>      The output path.
-        -s, --series <s>      The series name override.
         --ignoredub           Experimental: Ignore all seasons where the title end with 'Dub)'
         -n, --nametmpl <s>    Output name template (default: {SERIES_TITLE} - s{SEASON_NUMBER}e{EPISODE_NUMBER} - [{TAG}])
         -t, --tag <s>         The subgroup. (default: CrunchyRoll)
@@ -88,6 +87,8 @@ The [command-line interface](http://en.wikipedia.org/wiki/Command-line_interface
         --verbose             Make tool verbose
         --rebuildcrp          Rebuild the crpersistant file.
         --retry <i>           Number or time to retry fetching an episode. (default: 5)
+        -s, --sublang <items>  Select the subtitle languages, multiple value separated by a comma are accepted (like: frFR,enUS )
+        --sleepTime <i>        Minimum wait time between each http requests.
         -h, --help            output usage information
 
 #### Batch-mode
@@ -98,7 +99,7 @@ When no sequence of series addresses is provided, the batch-mode source file wil
 
 Starting from version 1.4.0, Crunchy store some information in a config.json file. The file which is use have to be in the folder you are calling Crunchy. This is partly by design and a limitation on where Crunchy can find files.
 
-This file store some informations like your username and password.
+This file store some information like your username and password.
 
 You don't need to create that file as Crunchy will create it for you, the first time you run it. Each run will update the content of the file, so it you run crunchy with your credential on the command line, it will add them to config file.
 
@@ -115,6 +116,7 @@ Here are the list of valid parameter in the config file:
   * `nametmpl` see `--nametmpl`
   * `tag` see `--tag`
   * `resolution` see `--resolution`
+  * `sublang` see `--sublang`
 
  - Login related options:
   * `pass` see `--user`
@@ -128,14 +130,15 @@ Here are the list of valid parameter in the config file:
   * `crLocale`
   * `crSessionKey`
   * `crLoginUrl`
-  * `crUserId`
-  * `crUserKey`
+  
+ - Other options:
+  * `sleepTime`: minimum delay (in ms) between each page load
 
  - Generated values: don't touch them:
   * `crDeviceId`
   * `crSessionId`
 
-Some of theses login related options are not going to be documented on what to put there for _legal_ reason.
+Some of these login related options are not going to be documented on what to put there for _legal_ reason.
 
 Crunchy will also create a `.cookie.jar` file in the output folder (by default the current folder) it is the file used by Crunchy to store the web cookies.
 
@@ -185,7 +188,24 @@ Download episodes starting from 42 to the last available of *Tail Fairy*:
 
     crunchy -u login -p password http://www.cr.com/tail-fairy -e 42-
 
+Download episode up to 42 (included) of *Tail Fairy* with italian subtitles:
 
+    crunchy -u login -p password http://www.cr.com/tail-fairy -e -42 -s itIT
+
+Download episode up to 42 (included) of *Tail Fairy* with italian subtitles and fallback to english if no available:
+
+    crunchy -u login -p password http://www.cr.com/tail-fairy -e -42 -s itIT,enUS
+
+#### Known valid subtitles language:
+ - `enUS` : English
+ - `frFR` : French
+ - `ptBR` : Portuguese (Brazil)
+ - `esES` : Spanish (Spain)
+ - `deDE` : German
+ - `esLA` : Spanish (Latin America)
+ - `itIT` : Italian
+ - `arME` : Armenian
+ - `ptPT` : Portuguese (Portugal)
 
 #### Command line parameters
 
@@ -246,5 +266,5 @@ More information will be added at a later point. For now the recommendations are
 
 * Atom with `atom-typescript` and `linter-tslint` (and dependencies).
 
-Since this project uses TypeScript, compile with `node run compile` to build the tool and `npm run test` to run the linter.
+Since this project uses TypeScript, compile with `node run build` to build the tool and `npm run test` to run the linter.
 
