@@ -390,6 +390,9 @@ function getOptions(config: IConfig, form: any)
     currentOptions = {};
     currentOptions.headers = {};
 
+    currentOptions.headers['Cache-Control'] = 'private';
+    currentOptions.headers.Accept = 'application/xml,application/xhtml+xml,text/html;q=0.9, text/plain;q=0.8,image/png,*/*;q=0.5';
+
     if (config.userAgent)
     {
       currentOptions.headers['User-Agent'] = config.userAgent;
@@ -406,7 +409,6 @@ function getOptions(config: IConfig, form: any)
 
     currentOptions.decodeEmails = true;
     currentOptions.jar = j;
-
     optionsSet = true;
   }
 
