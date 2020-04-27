@@ -71,8 +71,6 @@ export function save(config: IConfig)
   tmp.cache = undefined;
   tmp.episodes = undefined;
   tmp.series = undefined;
-  tmp.video_format = undefined;
-  tmp.video_quality = undefined;
   tmp.rebuildcrp = undefined;
   tmp.batch = undefined;
   tmp.verbose = undefined;

@@ -8,6 +8,7 @@ interface IConfig {
   episodes?: string;
   // Settings
   crlang?: string;
+  sublang?: any;
   format?: string;
   output?: string;
   series?: string;

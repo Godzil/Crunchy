@@ -38,19 +38,14 @@ export default function(args: string[], done: (err?: Error) => void)
     config.nametmpl = '{SERIES_TITLE} - s{SEASON_NUMBER}e{EPISODE_NUMBER} - {EPISODE_TITLE} - [{TAG}]';
   }
 
-  // Update the config file with new parameters
-  cfg.save(config);
-
-  if (config.unlog)
+  if (config.tag === undefined)
   {
-    config.crDeviceId = undefined;
-    config.user = undefined;
-    config.pass = undefined;
-    my_request.eatCookies(config);
-    cfg.save(config);
-    log.info('Unlogged!');
+    config.tag = 'CrunchyRoll';
+  }
 
-    process.exit(0);
+  if (config.sublang === undefined)
+  {
+    config.sublang = [ 'enUS' ];
   }
 
   // set resolution
@@ -73,6 +68,21 @@ export default function(args: string[], done: (err?: Error) => void)
     /* 1080 by default */
     config.video_format = resol_table['1080'].format;
     config.video_quality = resol_table['1080'].quality;
+  }
+
+  // Update the config file with new parameters
+  cfg.save(config);
+
+  if (config.unlog)
+  {
+    config.crDeviceId = undefined;
+    config.user = undefined;
+    config.pass = undefined;
+    my_request.eatCookies(config);
+    cfg.save(config);
+    log.info('Unlogged!');
+
+    process.exit(0);
   }
 
   if (config.debug)
@@ -388,8 +398,8 @@ function parse(args: string[]): IConfigLine
     .option('-s, --series <s>', 'The series name override.')
     .option('--ignoredub', 'Experimental: Ignore all seasons where the title end with \'Dub)\'')
     .option('-n, --nametmpl <s>', 'Output name template')
-    .option('-t, --tag <s>', 'The subgroup.', 'CrunchyRoll')
-    .option('-r, --resolution <s>', 'The video resolution. (valid: 360, 480, 720, 1080)', '1080')
+    .option('-t, --tag <s>', 'The subgroup.')
+    .option('-r, --resolution <s>', 'The video resolution. (valid: 360, 480, 720, 1080)')
     .option('-b, --batch <s>', 'Batch file', 'CrunchyRoll.txt')
     .option('--verbose', 'Make tool verbose')
     .option('--debug', 'Create a debug file. Use only if requested!')
