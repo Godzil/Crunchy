@@ -1,8 +1,10 @@
-extras/
+extra/
 node_modules/
 src/
-typings/
 ts.js
 tsconfig.json
 tsd.json
 tslint.json
+.idea/
+test/
+config.json
