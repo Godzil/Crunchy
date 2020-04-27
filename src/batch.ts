@@ -143,7 +143,10 @@ export default function(args: string[], done: (err?: Error) => void)
           }
           else if (tasksArr[i].retry <= 0)
           {
-            log.error(JSON.stringify(errin));
+            if (config.verbose)
+            {
+              log.error(JSON.stringify(errin));
+            }
             if (config.debug)
             {
               log.dumpToDebug('BatchGiveUp', JSON.stringify(errin));
