@@ -35,9 +35,6 @@ interface IConfig {
   crLocale?: string;
   crSessionKey?: string;
   crLoginUrl?: string;
-  // Third method, injecting data from cookies
-  crUserId?: string;
-  crUserKey?: string;
   // Generated values
   crDeviceId?: string;
   crSessionId?: string;
